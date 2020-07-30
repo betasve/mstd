@@ -1,8 +1,7 @@
 name: Go
 
-on:
-  repository_dispatch:
-    types: contract-content-changed
+on: repository_dispatc
+    # types: contract-content-changed
 
 jobs:
 
