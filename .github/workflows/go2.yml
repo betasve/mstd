@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ master ]
   repository_dispatch:
-    types: contract-content-changed
+    types: contract_published
 
 jobs:
   build:
