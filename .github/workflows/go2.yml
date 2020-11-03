@@ -23,7 +23,14 @@ jobs:
         go-version: '1.14.6'
 
     - name: List payload
-      run: 'echo "This is the event payload \n ${{github.event}}"'
+      run: |
+        'echo "pactUrl: ${{github.event.client_payload.pactUrl}} \n"'
+        'echo "consumerName: ${{github.event.client_payload.consumerName}} \n"'
+        'echo "providerName: ${{github.event.client_payload.providerName}} \n"'
+        'echo "consumerVersionNumber: ${{github.event.client_payload.consumerVersionNumber}} \n"'
+        'echo "providerVersionNumber: ${{github.event.client_payload.providerVersionNumber}} \n"'
+        'echo "providerVersionTag: ${{github.event.client_payload.providerVersionTag}} \n"'
+        'echo "consumerVersionTag: ${{github.event.client_payload.consumerVersionTag}} \n"'
 
     - name: Install dependencies
       run: |
