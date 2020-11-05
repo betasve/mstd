@@ -1,12 +1,8 @@
 name: Go
 
 on: 
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
-  repository_dispatch:
-    types: contract_published
 
 jobs:
   build:
@@ -24,13 +20,7 @@ jobs:
 
     - name: List payload
       run: |
-        'echo "pactUrl: ${{github.event.client_payload.pactUrl}} \n"'
-        'echo "consumerName: ${{github.event.client_payload.consumerName}} \n"'
-        'echo "providerName: ${{github.event.client_payload.providerName}} \n"'
-        'echo "consumerVersionNumber: ${{github.event.client_payload.consumerVersionNumber}} \n"'
-        'echo "providerVersionNumber: ${{github.event.client_payload.providerVersionNumber}} \n"'
-        'echo "providerVersionTag: ${{github.event.client_payload.providerVersionTag}} \n"'
-        'echo "consumerVersionTag: ${{github.event.client_payload.consumerVersionTag}} \n"'
+        'echo "${{github.ref}} \n"'
 
     - name: Install dependencies
       run: |
