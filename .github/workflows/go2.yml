@@ -20,7 +20,7 @@ jobs:
 
     - name: List payload
       run: |
-        'echo "${{github.ref}} \n"'
+        'echo "${{github.head_ref}} \n"'
 
     - name: Install dependencies
       run: |
