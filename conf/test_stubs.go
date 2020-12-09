@@ -1,11 +1,16 @@
 package conf
 
-var configFileUsed, getString, homedirPath string
+import (
+	t "time"
+)
+
+var configFileUsed, getString string
 var getStringFunc func(in string) string
 var addConfigPathFunc, setConfigNameFunc, setCfgFilePathFunc func(in string)
 var automaticEnvFunc func()
-var configErr error = nil
-var homedirErr error = nil
+var setKeyValue func(key string, value interface{})
+var configErr error
+var writeConfigFunc func() error
 
 type ViperServiceMock struct{}
 
@@ -19,9 +24,11 @@ func (v ViperServiceMock) GetString(key string) string {
 		return getString
 	}
 }
-func (v ViperServiceMock) SetConfigFile(in string) { setCfgFilePathFunc(in) }
-func (v ViperServiceMock) SetConfigName(in string) { setConfigNameFunc(in) }
-func (v ViperServiceMock) ReadInConfig() error     { return configErr }
+func (v ViperServiceMock) Set(key string, value interface{}) { setKeyValue(key, value) }
+func (v ViperServiceMock) SetConfigFile(in string)           { setCfgFilePathFunc(in) }
+func (v ViperServiceMock) SetConfigName(in string)           { setConfigNameFunc(in) }
+func (v ViperServiceMock) ReadInConfig() error               { return configErr }
+func (v ViperServiceMock) WriteConfig() error                { return writeConfigFunc() }
 
 type LoggerServiceMock struct{}
 
@@ -35,7 +42,40 @@ func (l LoggerServiceMock) Fatalf(format string, in ...interface{}) { fatalfMock
 
 type HomedirServiceMock struct{}
 
+var homedirErr error
+var homedirPath string
+
 func (h HomedirServiceMock) Dir() (string, error) {
 	homedirPath = "/home/user/"
 	return homedirPath, homedirErr
+}
+
+var timeAddMockFunc = func(d t.Duration) t.Time { return t.Now() }
+var timeNowMockFunc = func() t.Time { return t.Now() }
+var timeParseDurationMockFunc = func(s string) (t.Duration, error) { return t.Since(t.Now()), nil }
+var timeUnixMockFunc = func() int64 { return t.Now().Unix() }
+var timeUnixNanoMockFunc = func() int64 { return t.Now().UnixNano() }
+
+type TimeMock struct {
+	time t.Time
+}
+
+func (tm TimeMock) Add(d t.Duration) t.Time {
+	return timeAddMockFunc(d)
+}
+
+func (tm TimeMock) Now() t.Time {
+	return timeNowMockFunc()
+}
+
+func (tm TimeMock) ParseDuration(s string) (t.Duration, error) {
+	return timeParseDurationMockFunc(s)
+}
+
+func (tm TimeMock) Unix() int64 {
+	return timeUnixMockFunc()
+}
+
+func (tm TimeMock) UnixNano() int64 {
+	return timeUnixNanoMockFunc()
 }
