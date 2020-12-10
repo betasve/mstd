@@ -95,8 +95,7 @@ func SetClientRefreshToken(in string) {
 	}
 }
 
-// TODO: Write tests for that method
-func SetClientAccessTokenExpiry(seconds int) {
+func SetClientAccessTokenExpirySeconds(seconds int) {
 	tokenDuration := secondsToDuration(seconds)
 
 	viper.Client.Set(
@@ -176,7 +175,6 @@ func homeDir() string {
 	return home
 }
 
-// TODO: Cover with tests
 func unixTimeAfter(d t.Duration) int64 {
-	return t.Now().Add(d).UnixNano() / nanosecondsInASecond
+	return tm.Client.Now().Add(d).UnixNano() / nanosecondsInASecond
 }

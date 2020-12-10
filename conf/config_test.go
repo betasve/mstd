@@ -211,9 +211,41 @@ func TestSetClientRefreshTokenFailure(t *testing.T) {
 }
 
 func TestSetCleintAccessTokenExpirySuccess(t *testing.T) {
-	// expiry := SetClientAccessTokenExpiry(3600)
-	// t.Log(expiry)
-	//
+	tm.Client = TimeMock{}
+	// The unix timestamp equivalent of the testTime + 5 seconds
+	var expectedResult int64 = 1607591728
+	testTimestamp := "2020-12-10T09:15:23Z"
+	testTime, err := time.Parse(time.RFC3339, testTimestamp)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	timeNowMockFunc = func() time.Time { return testTime }
+	timeParseDurationMockFunc = func(s string) (time.Duration, error) { return time.ParseDuration(s) }
+
+	var resultKey string
+	var resultValue int64
+	var wroteConfigFlag bool
+	setKeyValue = func(k string, v interface{}) {
+		resultKey = k
+		resultValue = v.(int64)
+	}
+
+	writeConfigFunc = func() error { wroteConfigFlag = true; return nil }
+
+	SetClientAccessTokenExpirySeconds(5)
+	if defaultAccessTokenExpiryConfig != resultKey {
+		t.Errorf("expected \n%s \nbut got\n%s", defaultAccessTokenExpiryConfig, resultKey)
+	}
+
+	if expectedResult != resultValue {
+		t.Errorf("\nexpected \n%d \nbut got\n%d", expectedResult, resultValue)
+	}
+
+	if !wroteConfigFlag {
+		t.Error("expected to write to config\nbut did not")
+	}
 }
 
 func TestSecondsToDurationSuccess(t *testing.T) {
@@ -537,5 +569,30 @@ func testAccessorMethodFor(method func() string, stubValue string, t *testing.T)
 	result := method()
 	if result != getString {
 		t.Errorf("expected \n%s \n but got\n%s", getString, result)
+	}
+}
+
+func TestUnixTimeAfter(t *testing.T) {
+	testTime, err := time.Parse(time.RFC3339, "2020-12-10T09:15:23Z")
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	// The unix timestamp equivalent of the testTime + 5 seconds
+	var expectedResult int64 = 1607591728
+
+	fiveSecodsDuration, err := time.ParseDuration("5s")
+	if err != nil {
+		t.Error(err)
+	}
+
+	tm.Client = TimeMock{}
+	timeNowMockFunc = func() time.Time { return testTime }
+
+	result := unixTimeAfter(fiveSecodsDuration)
+
+	if result != expectedResult {
+		t.Errorf("expected \n%d \n but got\n%d", expectedResult, result)
 	}
 }

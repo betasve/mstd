@@ -56,9 +56,7 @@ var timeParseDurationMockFunc = func(s string) (t.Duration, error) { return t.Si
 var timeUnixMockFunc = func() int64 { return t.Now().Unix() }
 var timeUnixNanoMockFunc = func() int64 { return t.Now().UnixNano() }
 
-type TimeMock struct {
-	time t.Time
-}
+type TimeMock struct{}
 
 func (tm TimeMock) Add(d t.Duration) t.Time {
 	return timeAddMockFunc(d)
