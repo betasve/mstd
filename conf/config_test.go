@@ -248,6 +248,74 @@ func TestSetCleintAccessTokenExpirySuccess(t *testing.T) {
 	}
 }
 
+func TestSetCleintAccessTokenExpiryFailure(t *testing.T) {
+	tm.Client = TimeMock{}
+	log.Client = LoggerServiceMock{}
+
+	expectedErr := errors.New("Could not write config")
+	var err error
+	writeConfigFunc = func() error { return expectedErr }
+	fatalMock = func(in ...interface{}) { err = expectedErr }
+	SetClientAccessTokenExpirySeconds(5)
+
+	if err != expectedErr {
+		t.Errorf("expected \n%s \nbut got\n%s", err, expectedErr)
+	}
+}
+
+func TestSetCleintRefreshTokenExpirySuccess(t *testing.T) {
+	tm.Client = TimeMock{}
+	// The unix timestamp equivalent of the testTime + 5 seconds
+	var expectedResult int64 = 1607591728
+	testTimestamp := "2020-12-10T09:15:23Z"
+	testTime, err := time.Parse(time.RFC3339, testTimestamp)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	timeNowMockFunc = func() time.Time { return testTime }
+	timeParseDurationMockFunc = func(s string) (time.Duration, error) { return time.ParseDuration(s) }
+
+	var resultKey string
+	var resultValue int64
+	var wroteConfigFlag bool
+	setKeyValue = func(k string, v interface{}) {
+		resultKey = k
+		resultValue = v.(int64)
+	}
+
+	writeConfigFunc = func() error { wroteConfigFlag = true; return nil }
+
+	SetClientRefreshTokenExpirySeconds(5)
+	if defaultRefreshTokenExpiryConfig != resultKey {
+		t.Errorf("expected \n%s \nbut got\n%s", defaultRefreshTokenExpiryConfig, resultKey)
+	}
+
+	if expectedResult != resultValue {
+		t.Errorf("\nexpected \n%d \nbut got\n%d", expectedResult, resultValue)
+	}
+
+	if !wroteConfigFlag {
+		t.Error("expected to write to config\nbut did not")
+	}
+}
+
+func TestSetCleintRefreshTokenExpiryFailure(t *testing.T) {
+	tm.Client = TimeMock{}
+	log.Client = LoggerServiceMock{}
+
+	expectedErr := errors.New("Could not write config")
+	var err error
+	writeConfigFunc = func() error { return expectedErr }
+	fatalMock = func(in ...interface{}) { err = expectedErr }
+	SetClientRefreshTokenExpirySeconds(5)
+
+	if err != expectedErr {
+		t.Errorf("expected \n%s \nbut got\n%s", err, expectedErr)
+	}
+}
+
 func TestSecondsToDurationSuccess(t *testing.T) {
 	tm.Client = TimeMock{}
 	dur := time.Since(time.Now())

@@ -109,6 +109,20 @@ func SetClientAccessTokenExpirySeconds(seconds int) {
 	}
 }
 
+func SetClientRefreshTokenExpirySeconds(seconds int) {
+	tokenDuration := secondsToDuration(seconds)
+
+	viper.Client.Set(
+		defaultRefreshTokenExpiryConfig,
+		unixTimeAfter(tokenDuration),
+	)
+
+	err := viper.Client.WriteConfig()
+	if err != nil {
+		log.Client.Fatal(err.Error())
+	}
+}
+
 func secondsToDuration(s int) t.Duration {
 	secsStr := strconv.Itoa(s)
 	durSecs, err := tm.Client.ParseDuration(secsStr + "s")
