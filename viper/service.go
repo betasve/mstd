@@ -10,6 +10,7 @@ type ViperService interface {
 	AddConfigPath(in string)
 	AutomaticEnv()
 	ConfigFileUsed() string
+	GetInt64(key string) int64
 	GetString(key string) string
 	Set(key string, value interface{})
 	SetConfigFile(in string)
@@ -30,6 +31,10 @@ func (v Viper) AutomaticEnv() {
 
 func (v Viper) ConfigFileUsed() string {
 	return viper.ConfigFileUsed()
+}
+
+func (v Viper) GetInt64(key string) int64 {
+	return viper.GetInt64(key)
 }
 
 func (v Viper) GetString(key string) string {

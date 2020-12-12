@@ -50,33 +50,23 @@ func GetClientRefreshToken() string {
 }
 
 func GetClientAccessTokenExpiry() t.Time {
-	expires := viper.Client.GetString(defaultAccessTokenExpiryConfig)
+	expires := viper.Client.GetInt64(defaultAccessTokenExpiryConfig)
 
-	if len(expires) == 0 {
+	if expires == 0 {
 		log.Client.Fatal("Token expiration time is empty.Please login again")
 	}
 
-	i, err := strconv.ParseInt(expires, 10, 64)
-	if err != nil {
-		log.Client.Fatal("Problem retrieving token expiration time. Please login again")
-	}
-
-	return t.Unix(i, 0)
+	return t.Unix(expires, 0)
 }
 
 func GetClientRefreshTokenExpiry() t.Time {
-	expires := viper.Client.GetString(defaultRefreshTokenExpiryConfig)
+	expires := viper.Client.GetInt64(defaultRefreshTokenExpiryConfig)
 
-	if len(expires) == 0 {
+	if expires == 0 {
 		log.Client.Fatal("Refresh token expiration time is empty.Please login again")
 	}
 
-	i, err := strconv.ParseInt(expires, 10, 64)
-	if err != nil {
-		log.Client.Fatal("Problem retrieving refresh token expiration time. Please login again")
-	}
-
-	return t.Unix(i, 0)
+	return t.Unix(expires, 0)
 }
 
 func SetClientAccessToken(in string) {
