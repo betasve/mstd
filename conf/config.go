@@ -22,13 +22,27 @@ const nanosecondsInASecond int64 = 1_000_000_000
 
 var CfgFilePath string
 
+type State struct {
+	ClientId              string
+	ClientSecret          string
+	Permissions           string
+	AccessToken           string
+	RefreshToken          string
+	AccessTokenExpiresAt  t.Time
+	RefreshTokenExpiresAt t.Time
+}
+
+var CurrentState = State{}
+
 func InitConfig() {
 	setEnvVariables()
 	setViperConfig()
 
 	validateConfigFileAttributes()
+	populateCurrentState()
 }
 
+// TODO: make these public methods private if they turn out not needed
 func GetClientId() string {
 	return viper.Client.GetString(defaultClientIdConfig)
 }
@@ -52,19 +66,11 @@ func GetClientRefreshToken() string {
 func GetClientAccessTokenExpiry() t.Time {
 	expires := viper.Client.GetInt64(defaultAccessTokenExpiryConfig)
 
-	if expires == 0 {
-		log.Client.Fatal("Token expiration time is empty.Please login again")
-	}
-
 	return t.Unix(expires, 0)
 }
 
 func GetClientRefreshTokenExpiry() t.Time {
 	expires := viper.Client.GetInt64(defaultRefreshTokenExpiryConfig)
-
-	if expires == 0 {
-		log.Client.Fatal("Refresh token expiration time is empty.Please login again")
-	}
 
 	return t.Unix(expires, 0)
 }
@@ -111,6 +117,16 @@ func SetClientRefreshTokenExpirySeconds(seconds int) {
 	if err != nil {
 		log.Client.Fatal(err.Error())
 	}
+}
+
+func populateCurrentState() {
+	CurrentState.ClientId = GetClientId()
+	CurrentState.ClientSecret = GetClientSecret()
+	CurrentState.Permissions = GetClientPermissions()
+	CurrentState.AccessToken = GetClientAccessToken()
+	CurrentState.RefreshToken = GetClientRefreshToken()
+	CurrentState.AccessTokenExpiresAt = GetClientAccessTokenExpiry()
+	CurrentState.RefreshTokenExpiresAt = GetClientRefreshTokenExpiry()
 }
 
 func secondsToDuration(s int) t.Duration {

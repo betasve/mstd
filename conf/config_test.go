@@ -68,27 +68,19 @@ func TestGetClientAccessTokenExpirySuccess(t *testing.T) {
 
 func TestGetClientAccessTokenExpiryFailureWithEmptyExpiry(t *testing.T) {
 	getString = ""
-	var logResult error
-	err := errors.New("empty access token expiry")
-	log.Client = LoggerServiceMock{}
-	fatalMock = func(in ...interface{}) { logResult = err }
-	GetClientAccessTokenExpiry()
+	expiry := GetClientAccessTokenExpiry()
 
-	if err != logResult {
-		t.Errorf("expected error %s\nbut got\nnil", err.Error())
+	if expiry.Unix() != 0 {
+		t.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
 	}
 }
 
 func TestGetClientAccessTokenExpiryFailureWithInvalidExpiry(t *testing.T) {
 	getString = "abc"
-	var logResult error
-	err := errors.New("invalid access token expiry")
-	log.Client = LoggerServiceMock{}
-	fatalMock = func(in ...interface{}) { logResult = err }
-	GetClientAccessTokenExpiry()
+	expiry := GetClientAccessTokenExpiry()
 
-	if err != logResult {
-		t.Errorf("expected error %s\nbut got\nnil", err.Error())
+	if expiry.Unix() != 0 {
+		t.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
 	}
 }
 
@@ -104,27 +96,20 @@ func TestGetClientRefreshTokenExpirySuccess(t *testing.T) {
 
 func TestGetClientRefreshTokenExpiryFailureWithEmptyExpiry(t *testing.T) {
 	getString = ""
-	var logResult error
-	err := errors.New("empty refresh token")
-	log.Client = LoggerServiceMock{}
-	fatalMock = func(in ...interface{}) { logResult = err }
-	GetClientRefreshTokenExpiry()
+	expiry := GetClientRefreshTokenExpiry()
 
-	if err != logResult {
-		t.Errorf("expected error %s\nbut got\nnil", err.Error())
+	if expiry.Unix() != 0 {
+		t.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
 	}
 }
 
 func TestGetClientRefreshTokenExpiryFailureWithInvalidExpiry(t *testing.T) {
 	getString = "abc"
-	var logResult error
-	err := errors.New("invalid refresh token expiry")
 	log.Client = LoggerServiceMock{}
-	fatalMock = func(in ...interface{}) { logResult = err }
-	GetClientRefreshTokenExpiry()
+	expiry := GetClientRefreshTokenExpiry()
 
-	if err != logResult {
-		t.Errorf("expected error %s\nbut got\nnil", err.Error())
+	if expiry.Unix() != 0 {
+		t.Errorf("expected 0 Unix timestamp but got %v", expiry.Unix())
 	}
 }
 
@@ -210,7 +195,7 @@ func TestSetClientRefreshTokenFailure(t *testing.T) {
 	}
 }
 
-func TestSetCleintAccessTokenExpirySuccess(t *testing.T) {
+func TestSetClientAccessTokenExpirySuccess(t *testing.T) {
 	tm.Client = TimeMock{}
 	// The unix timestamp equivalent of the testTime + 5 seconds
 	var expectedResult int64 = 1607591728
@@ -248,7 +233,7 @@ func TestSetCleintAccessTokenExpirySuccess(t *testing.T) {
 	}
 }
 
-func TestSetCleintAccessTokenExpiryFailure(t *testing.T) {
+func TestSetClientAccessTokenExpiryFailure(t *testing.T) {
 	tm.Client = TimeMock{}
 	log.Client = LoggerServiceMock{}
 
@@ -263,7 +248,7 @@ func TestSetCleintAccessTokenExpiryFailure(t *testing.T) {
 	}
 }
 
-func TestSetCleintRefreshTokenExpirySuccess(t *testing.T) {
+func TestSetClientRefreshTokenExpirySecondsSuccess(t *testing.T) {
 	tm.Client = TimeMock{}
 	// The unix timestamp equivalent of the testTime + 5 seconds
 	var expectedResult int64 = 1607591728
@@ -301,7 +286,7 @@ func TestSetCleintRefreshTokenExpirySuccess(t *testing.T) {
 	}
 }
 
-func TestSetCleintRefreshTokenExpiryFailure(t *testing.T) {
+func TestSetClientRefreshTokenExpirySecondsFailure(t *testing.T) {
 	tm.Client = TimeMock{}
 	log.Client = LoggerServiceMock{}
 
@@ -313,6 +298,67 @@ func TestSetCleintRefreshTokenExpiryFailure(t *testing.T) {
 
 	if err != expectedErr {
 		t.Errorf("expected \n%s \nbut got\n%s", err, expectedErr)
+	}
+}
+
+func TestPopulateCurrentState(t *testing.T) {
+	viper.Client = ViperServiceMock{}
+	getStringFunc = func(key string) string {
+		switch key {
+		case defaultClientIdConfig:
+			return "client_id"
+		case defaultClientSecretConfig:
+			return "client_secret"
+		case defaultPermissionsConfig:
+			return "client_permissions"
+		case defaultAccessTokenConfig:
+			return "default_access_token"
+		case defaultRefreshTokenConfig:
+			return "default_refresh_token"
+		default:
+			return "default"
+		}
+	}
+
+	getInt64Func = func(key string) int64 {
+		switch key {
+		case defaultAccessTokenExpiryConfig:
+			return 1607590000
+		case defaultRefreshTokenExpiryConfig:
+			return 1607590011
+		default:
+			return 1
+		}
+	}
+
+	populateCurrentState()
+
+	if CurrentState.ClientId != "client_id" {
+		t.Errorf("\nexpcted client_id\nbut got\n%s", CurrentState.ClientId)
+	}
+
+	if CurrentState.ClientSecret != "client_secret" {
+		t.Errorf("\nexpcted client_secret\nbut got\n%s", CurrentState.ClientSecret)
+	}
+
+	if CurrentState.Permissions != "client_permissions" {
+		t.Errorf("\nexpcted client_permissions\nbut got\n%s", CurrentState.Permissions)
+	}
+
+	if CurrentState.AccessToken != "default_access_token" {
+		t.Errorf("\nexpcted default_access_token\nbut got\n%s", CurrentState.AccessToken)
+	}
+
+	if CurrentState.RefreshToken != "default_refresh_token" {
+		t.Errorf("\nexpcted default_refresh_token\nbut got\n%s", CurrentState.RefreshToken)
+	}
+
+	if CurrentState.AccessTokenExpiresAt != time.Unix(1607590000, 0) {
+		t.Errorf("\nexpcted %v\nbut got\n%s", time.Unix(1607590000, 0), CurrentState.AccessTokenExpiresAt)
+	}
+
+	if CurrentState.RefreshTokenExpiresAt != time.Unix(1607590011, 0) {
+		t.Errorf("\nexpcted %v\nbut got\n%s", time.Unix(1607590011, 0), CurrentState.RefreshTokenExpiresAt)
 	}
 }
 
