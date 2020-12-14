@@ -18,11 +18,13 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	l "github.com/betasve/mstd/logger"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
 	"net/http"
 	uri "net/url"
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -50,9 +52,15 @@ var authRequestPath = "/authorize"
 var tokenRequestPath = "/token"
 
 var appId = "b1a43d92-35c5-4654-ab80-1380211060a1"
-var permissions = "Tasks.ReadWrite"
+var permissions = "Tasks.ReadWrite,offline_access"
 
+// TODO: Add logout command to remove attributes from conf file
 func Login() {
+	if alreadyLogedIn() {
+		l.Client.Log("You are already logged in. If you want to log in anew, please use the logut command first.")
+		os.Exit(0)
+	}
+
 	// TODO: Interpolate string with variables
 	redirectUri := uri.Values{}
 	redirectUri.Add("redirect_uri", CallbackUrl)
@@ -201,4 +209,8 @@ func refreshToken() string {
 
 	log.Println(viper.GetString("access_token"))
 	return "s"
+}
+
+func alreadyLogedIn() bool {
+	return true
 }
