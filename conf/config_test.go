@@ -7,6 +7,7 @@ import (
 	t "github.com/betasve/mstd/time"
 	tt "github.com/betasve/mstd/time/timetest"
 	"github.com/betasve/mstd/viper"
+	vt "github.com/betasve/mstd/viper/vipertest"
 	"reflect"
 	"strings"
 	"testing"
@@ -15,12 +16,12 @@ import (
 
 func TestInitConfig(test *testing.T) {
 	CfgFilePath = "conf.yml"
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	CfgFilePath = "file/path"
-	configFileUsed = "file/path"
-	automaticEnvFunc = func() {}
-	setCfgFilePathFunc = func(in string) {}
-	getString = "clientId"
+	vt.ConfigFileUsed = "file/path"
+	vt.AutomaticEnvFunc = func() {}
+	vt.SetCfgFilePathFunc = func(in string) {}
+	vt.GetString = "clientId"
 
 	log.Client = LoggerServiceMock{}
 	var logResult string
@@ -58,7 +59,7 @@ func TestGetClientRefreshToken(test *testing.T) {
 }
 
 func TestGetClientAccessTokenExpirySuccess(test *testing.T) {
-	getString = "1607534638"
+	vt.GetString = "1607534638"
 	result := GetClientAccessTokenExpiry()
 	resultType := reflect.TypeOf(result).Name()
 
@@ -68,7 +69,7 @@ func TestGetClientAccessTokenExpirySuccess(test *testing.T) {
 }
 
 func TestGetClientAccessTokenExpiryFailureWithEmptyExpiry(test *testing.T) {
-	getString = ""
+	vt.GetString = ""
 	expiry := GetClientAccessTokenExpiry()
 
 	if expiry.Unix() != 0 {
@@ -77,7 +78,7 @@ func TestGetClientAccessTokenExpiryFailureWithEmptyExpiry(test *testing.T) {
 }
 
 func TestGetClientAccessTokenExpiryFailureWithInvalidExpiry(test *testing.T) {
-	getString = "abc"
+	vt.GetString = "abc"
 	expiry := GetClientAccessTokenExpiry()
 
 	if expiry.Unix() != 0 {
@@ -86,7 +87,7 @@ func TestGetClientAccessTokenExpiryFailureWithInvalidExpiry(test *testing.T) {
 }
 
 func TestGetClientRefreshTokenExpirySuccess(test *testing.T) {
-	getString = "1607519079"
+	vt.GetString = "1607519079"
 	result := GetClientRefreshTokenExpiry()
 	resultType := reflect.TypeOf(result).Name()
 
@@ -96,7 +97,7 @@ func TestGetClientRefreshTokenExpirySuccess(test *testing.T) {
 }
 
 func TestGetClientRefreshTokenExpiryFailureWithEmptyExpiry(test *testing.T) {
-	getString = ""
+	vt.GetString = ""
 	expiry := GetClientRefreshTokenExpiry()
 
 	if expiry.Unix() != 0 {
@@ -105,7 +106,7 @@ func TestGetClientRefreshTokenExpiryFailureWithEmptyExpiry(test *testing.T) {
 }
 
 func TestGetClientRefreshTokenExpiryFailureWithInvalidExpiry(test *testing.T) {
-	getString = "abc"
+	vt.GetString = "abc"
 	log.Client = LoggerServiceMock{}
 	expiry := GetClientRefreshTokenExpiry()
 
@@ -119,11 +120,11 @@ func TestSetClientAccessTokenSuccess(test *testing.T) {
 	var value interface{}
 	var writeCalled bool
 	expectedVal := "testVal"
-	setKeyValue = func(k string, v interface{}) {
+	vt.SetKeyValue = func(k string, v interface{}) {
 		key = k
 		value = v
 	}
-	writeConfigFunc = func() error { writeCalled = true; return nil }
+	vt.WriteConfigFunc = func() error { writeCalled = true; return nil }
 
 	SetClientAccessToken(expectedVal)
 
@@ -142,8 +143,8 @@ func TestSetClientAccessTokenSuccess(test *testing.T) {
 
 func TestSetClientAccessTokenFailure(test *testing.T) {
 	err := errors.New("could not write config")
-	setKeyValue = func(k string, v interface{}) {}
-	writeConfigFunc = func() error { return err }
+	vt.SetKeyValue = func(k string, v interface{}) {}
+	vt.WriteConfigFunc = func() error { return err }
 	log.Client = LoggerServiceMock{}
 	var expectedErr error
 	fatalMock = func(in ...interface{}) { expectedErr = err }
@@ -160,11 +161,11 @@ func TestSetClientRefreshTokenSuccess(test *testing.T) {
 	var value interface{}
 	var writeCalled bool
 	expectedVal := "testVal"
-	setKeyValue = func(k string, v interface{}) {
+	vt.SetKeyValue = func(k string, v interface{}) {
 		key = k
 		value = v
 	}
-	writeConfigFunc = func() error { writeCalled = true; return nil }
+	vt.WriteConfigFunc = func() error { writeCalled = true; return nil }
 
 	SetClientRefreshToken(expectedVal)
 
@@ -183,8 +184,8 @@ func TestSetClientRefreshTokenSuccess(test *testing.T) {
 
 func TestSetClientRefreshTokenFailure(test *testing.T) {
 	err := errors.New("could not write config")
-	setKeyValue = func(k string, v interface{}) {}
-	writeConfigFunc = func() error { return err }
+	vt.SetKeyValue = func(k string, v interface{}) {}
+	vt.WriteConfigFunc = func() error { return err }
 	log.Client = LoggerServiceMock{}
 	var expectedErr error
 	fatalMock = func(in ...interface{}) { expectedErr = err }
@@ -213,12 +214,12 @@ func TestSetClientAccessTokenExpirySuccess(test *testing.T) {
 	var resultKey string
 	var resultValue int64
 	var wroteConfigFlag bool
-	setKeyValue = func(k string, v interface{}) {
+	vt.SetKeyValue = func(k string, v interface{}) {
 		resultKey = k
 		resultValue = v.(int64)
 	}
 
-	writeConfigFunc = func() error { wroteConfigFlag = true; return nil }
+	vt.WriteConfigFunc = func() error { wroteConfigFlag = true; return nil }
 
 	SetClientAccessTokenExpirySeconds(5)
 	if defaultAccessTokenExpiryConfig != resultKey {
@@ -240,7 +241,7 @@ func TestSetClientAccessTokenExpiryFailure(test *testing.T) {
 
 	expectedErr := errors.New("Could not write config")
 	var err error
-	writeConfigFunc = func() error { return expectedErr }
+	vt.WriteConfigFunc = func() error { return expectedErr }
 	fatalMock = func(in ...interface{}) { err = expectedErr }
 	SetClientAccessTokenExpirySeconds(5)
 
@@ -266,12 +267,12 @@ func TestSetClientRefreshTokenExpirySecondsSuccess(test *testing.T) {
 	var resultKey string
 	var resultValue int64
 	var wroteConfigFlag bool
-	setKeyValue = func(k string, v interface{}) {
+	vt.SetKeyValue = func(k string, v interface{}) {
 		resultKey = k
 		resultValue = v.(int64)
 	}
 
-	writeConfigFunc = func() error { wroteConfigFlag = true; return nil }
+	vt.WriteConfigFunc = func() error { wroteConfigFlag = true; return nil }
 
 	SetClientRefreshTokenExpirySeconds(5)
 	if defaultRefreshTokenExpiryConfig != resultKey {
@@ -293,7 +294,7 @@ func TestSetClientRefreshTokenExpirySecondsFailure(test *testing.T) {
 
 	expectedErr := errors.New("Could not write config")
 	var err error
-	writeConfigFunc = func() error { return expectedErr }
+	vt.WriteConfigFunc = func() error { return expectedErr }
 	fatalMock = func(in ...interface{}) { err = expectedErr }
 	SetClientRefreshTokenExpirySeconds(5)
 
@@ -303,8 +304,8 @@ func TestSetClientRefreshTokenExpirySecondsFailure(test *testing.T) {
 }
 
 func TestPopulateCurrentState(test *testing.T) {
-	viper.Client = ViperServiceMock{}
-	getStringFunc = func(key string) string {
+	viper.Client = vt.ViperServiceMock{}
+	vt.GetStringFunc = func(key string) string {
 		switch key {
 		case defaultClientIdConfig:
 			return "client_id"
@@ -321,7 +322,7 @@ func TestPopulateCurrentState(test *testing.T) {
 		}
 	}
 
-	getInt64Func = func(key string) int64 {
+	vt.GetInt64Func = func(key string) int64 {
 		switch key {
 		case defaultAccessTokenExpiryConfig:
 			return 1607590000
@@ -395,21 +396,21 @@ func TestSetViperConfigWithConfigFilePath(test *testing.T) {
 	var logResult string
 	var result string
 	CfgFilePath = "file/path"
-	configFileUsed = "conf.yml"
+	vt.ConfigFileUsed = "conf.yml"
 
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 
 	logMock = func(in string) { logResult = in }
-	setCfgFilePathFunc = func(in string) { result = CfgFilePath }
+	vt.SetCfgFilePathFunc = func(in string) { result = CfgFilePath }
 
 	setViperConfig()
 	if result != CfgFilePath {
 		test.Errorf("expected \n%s \n but got\n%s", CfgFilePath, result)
 	}
 
-	if !strings.Contains(logResult, "Using config file: "+configFileUsed) {
-		test.Errorf("expected \n%s \n to contain\n%s", logResult, configFileUsed)
+	if !strings.Contains(logResult, "Using config file: "+vt.ConfigFileUsed) {
+		test.Errorf("expected \n%s \n to contain\n%s", logResult, vt.ConfigFileUsed)
 	}
 }
 
@@ -418,36 +419,36 @@ func TestSetViperConfigWithoutConfigFilePath(test *testing.T) {
 	var addConfigPathResult string
 	var setConfigNameResult string
 	CfgFilePath = ""
-	configFileUsed = "conf.yml"
+	vt.ConfigFileUsed = "conf.yml"
 
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 
 	logMock = func(in string) { logResult = in }
-	addConfigPathFunc = func(in string) { addConfigPathResult = "homedir" }
-	setConfigNameFunc = func(in string) { setConfigNameResult = configFileUsed }
+	vt.AddConfigPathFunc = func(in string) { addConfigPathResult = "homedir" }
+	vt.SetConfigNameFunc = func(in string) { setConfigNameResult = vt.ConfigFileUsed }
 
 	setViperConfig()
-	if addConfigPathResult != "homedir" && setConfigNameResult != configFileUsed {
+	if addConfigPathResult != "homedir" && setConfigNameResult != vt.ConfigFileUsed {
 		test.Errorf(
 			"expected config path \n%s \n but was\n%s"+
 				"\nexpected config name \n%s but was\n%s",
 			addConfigPathResult,
 			"homedir",
 			setConfigNameResult,
-			configFileUsed,
+			vt.ConfigFileUsed,
 		)
 	}
 
-	if !strings.Contains(logResult, "Using config file: "+configFileUsed) {
-		test.Errorf("expected \n%s \n to contain\n%s", configFileUsed, logResult)
+	if !strings.Contains(logResult, "Using config file: "+vt.ConfigFileUsed) {
+		test.Errorf("expected \n%s \n to contain\n%s", vt.ConfigFileUsed, logResult)
 	}
 }
 
 func TestSetEnvVariables(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	var funcInvoked bool
-	automaticEnvFunc = func() { funcInvoked = true }
+	vt.AutomaticEnvFunc = func() { funcInvoked = true }
 
 	setEnvVariables()
 	if !funcInvoked {
@@ -457,39 +458,39 @@ func TestSetEnvVariables(test *testing.T) {
 
 func TestReadConfigFileSuccess(test *testing.T) {
 	var result string
-	configFileUsed = "Using config file: .mstd.yml"
+	vt.ConfigFileUsed = "Using config file: .mstd.yml"
 	logMock = func(in string) { result = in }
 	log.Client = LoggerServiceMock{}
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 
 	readConfigFile()
 
-	if !strings.Contains(result, configFileUsed) {
-		test.Errorf("expected \n%s \n to contain\n%s", configFileUsed, result)
+	if !strings.Contains(result, vt.ConfigFileUsed) {
+		test.Errorf("expected \n%s \n to contain\n%s", vt.ConfigFileUsed, result)
 	}
 }
 
 func TestReadConfigFileFailure(test *testing.T) {
 	var result error
 	err := errors.New("Cannot read in config")
-	configErr = err
+	vt.ConfigErr = err
 	fatalMock = func(in ...interface{}) { result = err }
 	log.Client = LoggerServiceMock{}
 
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	readConfigFile()
 
 	if result != err {
-		test.Errorf("expected error\n%s \n but got\n%s", result.Error(), configErr.Error())
+		test.Errorf("expected error\n%s \n but got\n%s", result.Error(), vt.ConfigErr.Error())
 	}
 }
 
 func TestValidateConfigFileAttributesSuccess(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	fatalMock = func(in ...interface{}) { result = errors.New("invalid call") }
-	getString = "clientId"
+	vt.GetString = "clientId"
 
 	validateConfigFileAttributes()
 	if result != nil {
@@ -498,12 +499,12 @@ func TestValidateConfigFileAttributesSuccess(test *testing.T) {
 }
 
 func TestValidateConfigFileAttributesClientIdFailure(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	err := errors.New("missing client id")
 	fatalfMock = func(f string, in ...interface{}) { result = err }
-	getStringFunc = func(key string) string {
+	vt.GetStringFunc = func(key string) string {
 		if key == defaultClientIdConfig {
 			return ""
 		} else {
@@ -518,12 +519,12 @@ func TestValidateConfigFileAttributesClientIdFailure(test *testing.T) {
 }
 
 func TestValidateConfigFileAttributesClientSecretFailure(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	err := errors.New("missing client secret")
 	fatalfMock = func(f string, in ...interface{}) { result = err }
-	getStringFunc = func(key string) string {
+	vt.GetStringFunc = func(key string) string {
 		if key == defaultClientSecretConfig {
 			return "clientId"
 		} else {
@@ -538,12 +539,12 @@ func TestValidateConfigFileAttributesClientSecretFailure(test *testing.T) {
 }
 
 func TestValidateConfigFileAttributesClientPermissionsFailure(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	err := errors.New("missing client permissions")
 	fatalfMock = func(f string, in ...interface{}) { result = err }
-	getStringFunc = func(key string) string {
+	vt.GetStringFunc = func(key string) string {
 		if key == defaultPermissionsConfig {
 			return ""
 		} else {
@@ -558,11 +559,11 @@ func TestValidateConfigFileAttributesClientPermissionsFailure(test *testing.T) {
 }
 
 func TestValidateClientIdConfigPresenceSuccess(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	fatalMock = func(in ...interface{}) { result = errors.New("invalid call") }
-	getString = "clientId"
+	vt.GetString = "clientId"
 
 	validateClientIdConfigPresence()
 	if result != nil {
@@ -571,7 +572,7 @@ func TestValidateClientIdConfigPresenceSuccess(test *testing.T) {
 }
 
 func TestValidateClientIdConfigPresenceFailure(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	err := errors.New("invalid call")
@@ -580,8 +581,8 @@ func TestValidateClientIdConfigPresenceFailure(test *testing.T) {
 		result = err
 	}
 
-	getString = ""
-	getStringFunc = nil
+	vt.GetString = ""
+	vt.GetStringFunc = nil
 
 	validateClientIdConfigPresence()
 	if result == nil {
@@ -590,11 +591,11 @@ func TestValidateClientIdConfigPresenceFailure(test *testing.T) {
 }
 
 func TestValidateClientSecretConfigPresenceSuccess(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	fatalMock = func(in ...interface{}) { result = errors.New("invalid call") }
-	getString = "clientSecret"
+	vt.GetString = "clientSecret"
 
 	validateClientSecretConfigPresence()
 	if result != nil {
@@ -603,7 +604,7 @@ func TestValidateClientSecretConfigPresenceSuccess(test *testing.T) {
 }
 
 func TestValidateClientSecretConfigPresenceFailure(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	err := errors.New("invalid call")
@@ -612,8 +613,8 @@ func TestValidateClientSecretConfigPresenceFailure(test *testing.T) {
 		result = err
 	}
 
-	getString = ""
-	getStringFunc = nil
+	vt.GetString = ""
+	vt.GetStringFunc = nil
 
 	validateClientSecretConfigPresence()
 	if result == nil {
@@ -622,11 +623,11 @@ func TestValidateClientSecretConfigPresenceFailure(test *testing.T) {
 }
 
 func TestValidateClientConfigPermissionsPresenceSuccess(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	fatalMock = func(in ...interface{}) { result = errors.New("invalid call") }
-	getString = "clientPermissions"
+	vt.GetString = "clientPermissions"
 
 	validateClientPermissionsConfigPresence()
 	if result != nil {
@@ -635,7 +636,7 @@ func TestValidateClientConfigPermissionsPresenceSuccess(test *testing.T) {
 }
 
 func TestValidateClientPermissionsConfigPresenceFailure(test *testing.T) {
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
 	err := errors.New("invalid call")
@@ -644,8 +645,8 @@ func TestValidateClientPermissionsConfigPresenceFailure(test *testing.T) {
 		result = err
 	}
 
-	getString = ""
-	getStringFunc = nil
+	vt.GetString = ""
+	vt.GetStringFunc = nil
 
 	validateClientPermissionsConfigPresence()
 	if result == nil {
@@ -677,13 +678,13 @@ func TestHomedirFailure(test *testing.T) {
 }
 
 func testAccessorMethodFor(method func() string, stubValue string, test *testing.T) {
-	getString = stubValue
+	vt.GetString = stubValue
 
-	viper.Client = ViperServiceMock{}
+	viper.Client = vt.ViperServiceMock{}
 
 	result := method()
-	if result != getString {
-		test.Errorf("expected \n%s \n but got\n%s", getString, result)
+	if result != vt.GetString {
+		test.Errorf("expected \n%s \n but got\n%s", vt.GetString, result)
 	}
 }
 
