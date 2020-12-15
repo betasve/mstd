@@ -1,9 +1,5 @@
 package conf
 
-import (
-	t "time"
-)
-
 var configFileUsed, getString string
 var getStringFunc func(in string) string
 var getInt64Func func(in string) int64
@@ -57,32 +53,4 @@ var homedirPath string
 func (h HomedirServiceMock) Dir() (string, error) {
 	homedirPath = "/home/user/"
 	return homedirPath, homedirErr
-}
-
-var timeAddMockFunc = func(d t.Duration) t.Time { return t.Now() }
-var timeNowMockFunc = func() t.Time { return t.Now() }
-var timeParseDurationMockFunc = func(s string) (t.Duration, error) { return t.Since(t.Now()), nil }
-var timeUnixMockFunc = func() int64 { return t.Now().Unix() }
-var timeUnixNanoMockFunc = func() int64 { return t.Now().UnixNano() }
-
-type TimeMock struct{}
-
-func (tm TimeMock) Add(d t.Duration) t.Time {
-	return timeAddMockFunc(d)
-}
-
-func (tm TimeMock) Now() t.Time {
-	return timeNowMockFunc()
-}
-
-func (tm TimeMock) ParseDuration(s string) (t.Duration, error) {
-	return timeParseDurationMockFunc(s)
-}
-
-func (tm TimeMock) Unix() int64 {
-	return timeUnixMockFunc()
-}
-
-func (tm TimeMock) UnixNano() int64 {
-	return timeUnixNanoMockFunc()
 }

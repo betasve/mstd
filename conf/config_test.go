@@ -4,7 +4,8 @@ import (
 	"errors"
 	"github.com/betasve/mstd/homedir"
 	log "github.com/betasve/mstd/logger"
-	tm "github.com/betasve/mstd/time"
+	t "github.com/betasve/mstd/time"
+	tt "github.com/betasve/mstd/time/timetest"
 	"github.com/betasve/mstd/viper"
 	"reflect"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	"time"
 )
 
-func TestInitConfig(t *testing.T) {
+func TestInitConfig(test *testing.T) {
 	CfgFilePath = "conf.yml"
 	viper.Client = ViperServiceMock{}
 	CfgFilePath = "file/path"
@@ -28,7 +29,7 @@ func TestInitConfig(t *testing.T) {
 	InitConfig()
 
 	if !strings.Contains(logResult, "Using config file: file/path") {
-		t.Errorf(
+		test.Errorf(
 			"expected log to contain \n%s \n but got\n%s",
 			"Using config file: file/path",
 			logResult,
@@ -36,84 +37,84 @@ func TestInitConfig(t *testing.T) {
 	}
 }
 
-func TestGetClientId(t *testing.T) {
-	testAccessorMethodFor(GetClientId, defaultClientIdConfig, t)
+func TestGetClientId(test *testing.T) {
+	testAccessorMethodFor(GetClientId, defaultClientIdConfig, test)
 }
 
-func TestGetClientSecret(t *testing.T) {
-	testAccessorMethodFor(GetClientSecret, defaultClientSecretConfig, t)
+func TestGetClientSecret(test *testing.T) {
+	testAccessorMethodFor(GetClientSecret, defaultClientSecretConfig, test)
 }
 
-func TestGetClientPermissions(t *testing.T) {
-	testAccessorMethodFor(GetClientPermissions, defaultPermissionsConfig, t)
+func TestGetClientPermissions(test *testing.T) {
+	testAccessorMethodFor(GetClientPermissions, defaultPermissionsConfig, test)
 }
 
-func TestGetClientAccessToken(t *testing.T) {
-	testAccessorMethodFor(GetClientAccessToken, defaultAccessTokenConfig, t)
+func TestGetClientAccessToken(test *testing.T) {
+	testAccessorMethodFor(GetClientAccessToken, defaultAccessTokenConfig, test)
 }
 
-func TestGetClientRefreshToken(t *testing.T) {
-	testAccessorMethodFor(GetClientRefreshToken, defaultRefreshTokenConfig, t)
+func TestGetClientRefreshToken(test *testing.T) {
+	testAccessorMethodFor(GetClientRefreshToken, defaultRefreshTokenConfig, test)
 }
 
-func TestGetClientAccessTokenExpirySuccess(t *testing.T) {
+func TestGetClientAccessTokenExpirySuccess(test *testing.T) {
 	getString = "1607534638"
 	result := GetClientAccessTokenExpiry()
 	resultType := reflect.TypeOf(result).Name()
 
 	if resultType != "Time" {
-		t.Errorf("expected Time\nbut got\n%s", resultType)
+		test.Errorf("expected Time\nbut got\n%s", resultType)
 	}
 }
 
-func TestGetClientAccessTokenExpiryFailureWithEmptyExpiry(t *testing.T) {
+func TestGetClientAccessTokenExpiryFailureWithEmptyExpiry(test *testing.T) {
 	getString = ""
 	expiry := GetClientAccessTokenExpiry()
 
 	if expiry.Unix() != 0 {
-		t.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
+		test.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
 	}
 }
 
-func TestGetClientAccessTokenExpiryFailureWithInvalidExpiry(t *testing.T) {
+func TestGetClientAccessTokenExpiryFailureWithInvalidExpiry(test *testing.T) {
 	getString = "abc"
 	expiry := GetClientAccessTokenExpiry()
 
 	if expiry.Unix() != 0 {
-		t.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
+		test.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
 	}
 }
 
-func TestGetClientRefreshTokenExpirySuccess(t *testing.T) {
+func TestGetClientRefreshTokenExpirySuccess(test *testing.T) {
 	getString = "1607519079"
 	result := GetClientRefreshTokenExpiry()
 	resultType := reflect.TypeOf(result).Name()
 
 	if resultType != "Time" {
-		t.Errorf("expected Time\nbut got\n%s", resultType)
+		test.Errorf("expected Time\nbut got\n%s", resultType)
 	}
 }
 
-func TestGetClientRefreshTokenExpiryFailureWithEmptyExpiry(t *testing.T) {
+func TestGetClientRefreshTokenExpiryFailureWithEmptyExpiry(test *testing.T) {
 	getString = ""
 	expiry := GetClientRefreshTokenExpiry()
 
 	if expiry.Unix() != 0 {
-		t.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
+		test.Errorf("\nexpected Unix timestamp of 0\nbut got\n%v", expiry.Unix())
 	}
 }
 
-func TestGetClientRefreshTokenExpiryFailureWithInvalidExpiry(t *testing.T) {
+func TestGetClientRefreshTokenExpiryFailureWithInvalidExpiry(test *testing.T) {
 	getString = "abc"
 	log.Client = LoggerServiceMock{}
 	expiry := GetClientRefreshTokenExpiry()
 
 	if expiry.Unix() != 0 {
-		t.Errorf("expected 0 Unix timestamp but got %v", expiry.Unix())
+		test.Errorf("expected 0 Unix timestamp but got %v", expiry.Unix())
 	}
 }
 
-func TestSetClientAccessTokenSuccess(t *testing.T) {
+func TestSetClientAccessTokenSuccess(test *testing.T) {
 	var key string
 	var value interface{}
 	var writeCalled bool
@@ -127,7 +128,7 @@ func TestSetClientAccessTokenSuccess(t *testing.T) {
 	SetClientAccessToken(expectedVal)
 
 	if key != defaultAccessTokenConfig || value != expectedVal || !writeCalled {
-		t.Errorf(
+		test.Errorf(
 			"expected\nkey: %s,\nvalue: %s,\nwrite called: true\n"+
 				"but got\nkey: %s,\nvalue: %s,\nwrite called: %t",
 			defaultAccessTokenConfig,
@@ -139,7 +140,7 @@ func TestSetClientAccessTokenSuccess(t *testing.T) {
 	}
 }
 
-func TestSetClientAccessTokenFailure(t *testing.T) {
+func TestSetClientAccessTokenFailure(test *testing.T) {
 	err := errors.New("could not write config")
 	setKeyValue = func(k string, v interface{}) {}
 	writeConfigFunc = func() error { return err }
@@ -150,11 +151,11 @@ func TestSetClientAccessTokenFailure(t *testing.T) {
 	SetClientAccessToken("")
 
 	if expectedErr != err {
-		t.Errorf("expected error\n %s but got %s", expectedErr.Error(), err.Error())
+		test.Errorf("expected error\n %s but got %s", expectedErr.Error(), err.Error())
 	}
 }
 
-func TestSetClientRefreshTokenSuccess(t *testing.T) {
+func TestSetClientRefreshTokenSuccess(test *testing.T) {
 	var key string
 	var value interface{}
 	var writeCalled bool
@@ -168,7 +169,7 @@ func TestSetClientRefreshTokenSuccess(t *testing.T) {
 	SetClientRefreshToken(expectedVal)
 
 	if key != defaultRefreshTokenConfig || value != expectedVal || !writeCalled {
-		t.Errorf(
+		test.Errorf(
 			"expected\nkey: %s,\nvalue: %s,\nwrite called: true\n"+
 				"but got\nkey: %s,\nvalue: %s,\nwrite called: %t",
 			defaultRefreshTokenConfig,
@@ -180,7 +181,7 @@ func TestSetClientRefreshTokenSuccess(t *testing.T) {
 	}
 }
 
-func TestSetClientRefreshTokenFailure(t *testing.T) {
+func TestSetClientRefreshTokenFailure(test *testing.T) {
 	err := errors.New("could not write config")
 	setKeyValue = func(k string, v interface{}) {}
 	writeConfigFunc = func() error { return err }
@@ -191,23 +192,23 @@ func TestSetClientRefreshTokenFailure(t *testing.T) {
 	SetClientRefreshToken("")
 
 	if expectedErr != err {
-		t.Errorf("expected error\n %s but got %s", expectedErr.Error(), err.Error())
+		test.Errorf("expected error\n %s but got %s", expectedErr.Error(), err.Error())
 	}
 }
 
-func TestSetClientAccessTokenExpirySuccess(t *testing.T) {
-	tm.Client = TimeMock{}
+func TestSetClientAccessTokenExpirySuccess(test *testing.T) {
+	t.Client = tt.TimeMock{}
 	// The unix timestamp equivalent of the testTime + 5 seconds
 	var expectedResult int64 = 1607591728
 	testTimestamp := "2020-12-10T09:15:23Z"
 	testTime, err := time.Parse(time.RFC3339, testTimestamp)
 
 	if err != nil {
-		t.Error(err)
+		test.Error(err)
 	}
 
-	timeNowMockFunc = func() time.Time { return testTime }
-	timeParseDurationMockFunc = func(s string) (time.Duration, error) { return time.ParseDuration(s) }
+	tt.TimeNowMockFunc = func() time.Time { return testTime }
+	tt.TimeParseDurationMockFunc = func(s string) (time.Duration, error) { return time.ParseDuration(s) }
 
 	var resultKey string
 	var resultValue int64
@@ -221,20 +222,20 @@ func TestSetClientAccessTokenExpirySuccess(t *testing.T) {
 
 	SetClientAccessTokenExpirySeconds(5)
 	if defaultAccessTokenExpiryConfig != resultKey {
-		t.Errorf("expected \n%s \nbut got\n%s", defaultAccessTokenExpiryConfig, resultKey)
+		test.Errorf("expected \n%s \nbut got\n%s", defaultAccessTokenExpiryConfig, resultKey)
 	}
 
 	if expectedResult != resultValue {
-		t.Errorf("\nexpected \n%d \nbut got\n%d", expectedResult, resultValue)
+		test.Errorf("\nexpected \n%d \nbut got\n%d", expectedResult, resultValue)
 	}
 
 	if !wroteConfigFlag {
-		t.Error("expected to write to config\nbut did not")
+		test.Error("expected to write to config\nbut did not")
 	}
 }
 
-func TestSetClientAccessTokenExpiryFailure(t *testing.T) {
-	tm.Client = TimeMock{}
+func TestSetClientAccessTokenExpiryFailure(test *testing.T) {
+	t.Client = tt.TimeMock{}
 	log.Client = LoggerServiceMock{}
 
 	expectedErr := errors.New("Could not write config")
@@ -244,23 +245,23 @@ func TestSetClientAccessTokenExpiryFailure(t *testing.T) {
 	SetClientAccessTokenExpirySeconds(5)
 
 	if err != expectedErr {
-		t.Errorf("expected \n%s \nbut got\n%s", err, expectedErr)
+		test.Errorf("expected \n%s \nbut got\n%s", err, expectedErr)
 	}
 }
 
-func TestSetClientRefreshTokenExpirySecondsSuccess(t *testing.T) {
-	tm.Client = TimeMock{}
+func TestSetClientRefreshTokenExpirySecondsSuccess(test *testing.T) {
+	t.Client = tt.TimeMock{}
 	// The unix timestamp equivalent of the testTime + 5 seconds
 	var expectedResult int64 = 1607591728
 	testTimestamp := "2020-12-10T09:15:23Z"
 	testTime, err := time.Parse(time.RFC3339, testTimestamp)
 
 	if err != nil {
-		t.Error(err)
+		test.Error(err)
 	}
 
-	timeNowMockFunc = func() time.Time { return testTime }
-	timeParseDurationMockFunc = func(s string) (time.Duration, error) { return time.ParseDuration(s) }
+	tt.TimeNowMockFunc = func() time.Time { return testTime }
+	tt.TimeParseDurationMockFunc = func(s string) (time.Duration, error) { return time.ParseDuration(s) }
 
 	var resultKey string
 	var resultValue int64
@@ -274,20 +275,20 @@ func TestSetClientRefreshTokenExpirySecondsSuccess(t *testing.T) {
 
 	SetClientRefreshTokenExpirySeconds(5)
 	if defaultRefreshTokenExpiryConfig != resultKey {
-		t.Errorf("expected \n%s \nbut got\n%s", defaultRefreshTokenExpiryConfig, resultKey)
+		test.Errorf("expected \n%s \nbut got\n%s", defaultRefreshTokenExpiryConfig, resultKey)
 	}
 
 	if expectedResult != resultValue {
-		t.Errorf("\nexpected \n%d \nbut got\n%d", expectedResult, resultValue)
+		test.Errorf("\nexpected \n%d \nbut got\n%d", expectedResult, resultValue)
 	}
 
 	if !wroteConfigFlag {
-		t.Error("expected to write to config\nbut did not")
+		test.Error("expected to write to config\nbut did not")
 	}
 }
 
-func TestSetClientRefreshTokenExpirySecondsFailure(t *testing.T) {
-	tm.Client = TimeMock{}
+func TestSetClientRefreshTokenExpirySecondsFailure(test *testing.T) {
+	t.Client = tt.TimeMock{}
 	log.Client = LoggerServiceMock{}
 
 	expectedErr := errors.New("Could not write config")
@@ -297,11 +298,11 @@ func TestSetClientRefreshTokenExpirySecondsFailure(t *testing.T) {
 	SetClientRefreshTokenExpirySeconds(5)
 
 	if err != expectedErr {
-		t.Errorf("expected \n%s \nbut got\n%s", err, expectedErr)
+		test.Errorf("expected \n%s \nbut got\n%s", err, expectedErr)
 	}
 }
 
-func TestPopulateCurrentState(t *testing.T) {
+func TestPopulateCurrentState(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	getStringFunc = func(key string) string {
 		switch key {
@@ -334,49 +335,49 @@ func TestPopulateCurrentState(t *testing.T) {
 	populateCurrentState()
 
 	if CurrentState.ClientId != "client_id" {
-		t.Errorf("\nexpcted client_id\nbut got\n%s", CurrentState.ClientId)
+		test.Errorf("\nexpcted client_id\nbut got\n%s", CurrentState.ClientId)
 	}
 
 	if CurrentState.ClientSecret != "client_secret" {
-		t.Errorf("\nexpcted client_secret\nbut got\n%s", CurrentState.ClientSecret)
+		test.Errorf("\nexpcted client_secret\nbut got\n%s", CurrentState.ClientSecret)
 	}
 
 	if CurrentState.Permissions != "client_permissions" {
-		t.Errorf("\nexpcted client_permissions\nbut got\n%s", CurrentState.Permissions)
+		test.Errorf("\nexpcted client_permissions\nbut got\n%s", CurrentState.Permissions)
 	}
 
 	if CurrentState.AccessToken != "default_access_token" {
-		t.Errorf("\nexpcted default_access_token\nbut got\n%s", CurrentState.AccessToken)
+		test.Errorf("\nexpcted default_access_token\nbut got\n%s", CurrentState.AccessToken)
 	}
 
 	if CurrentState.RefreshToken != "default_refresh_token" {
-		t.Errorf("\nexpcted default_refresh_token\nbut got\n%s", CurrentState.RefreshToken)
+		test.Errorf("\nexpcted default_refresh_token\nbut got\n%s", CurrentState.RefreshToken)
 	}
 
 	if CurrentState.AccessTokenExpiresAt != time.Unix(1607590000, 0) {
-		t.Errorf("\nexpcted %v\nbut got\n%s", time.Unix(1607590000, 0), CurrentState.AccessTokenExpiresAt)
+		test.Errorf("\nexpcted %v\nbut got\n%s", time.Unix(1607590000, 0), CurrentState.AccessTokenExpiresAt)
 	}
 
 	if CurrentState.RefreshTokenExpiresAt != time.Unix(1607590011, 0) {
-		t.Errorf("\nexpcted %v\nbut got\n%s", time.Unix(1607590011, 0), CurrentState.RefreshTokenExpiresAt)
+		test.Errorf("\nexpcted %v\nbut got\n%s", time.Unix(1607590011, 0), CurrentState.RefreshTokenExpiresAt)
 	}
 }
 
-func TestSecondsToDurationSuccess(t *testing.T) {
-	tm.Client = TimeMock{}
+func TestSecondsToDurationSuccess(test *testing.T) {
+	t.Client = tt.TimeMock{}
 	dur := time.Since(time.Now())
-	timeParseDurationMockFunc = func(s string) (time.Duration, error) { return dur, nil }
+	tt.TimeParseDurationMockFunc = func(s string) (time.Duration, error) { return dur, nil }
 
 	result := secondsToDuration(42)
 	if result != dur {
-		t.Errorf("expected \n%s \n but got\n%s", dur.String(), result.String())
+		test.Errorf("expected \n%s \n but got\n%s", dur.String(), result.String())
 	}
 }
 
-func TestSecondsToDurationFailure(t *testing.T) {
-	tm.Client = TimeMock{}
+func TestSecondsToDurationFailure(test *testing.T) {
+	t.Client = tt.TimeMock{}
 	err := errors.New("cannot parse")
-	timeParseDurationMockFunc = func(s string) (time.Duration, error) {
+	tt.TimeParseDurationMockFunc = func(s string) (time.Duration, error) {
 		return time.Since(time.Now()), err
 	}
 
@@ -386,11 +387,11 @@ func TestSecondsToDurationFailure(t *testing.T) {
 
 	secondsToDuration(42)
 	if result != err {
-		t.Errorf("expected \n%s \n but got\n%s", err, result)
+		test.Errorf("expected \n%s \n but got\n%s", err, result)
 	}
 }
 
-func TestSetViperConfigWithConfigFilePath(t *testing.T) {
+func TestSetViperConfigWithConfigFilePath(test *testing.T) {
 	var logResult string
 	var result string
 	CfgFilePath = "file/path"
@@ -404,15 +405,15 @@ func TestSetViperConfigWithConfigFilePath(t *testing.T) {
 
 	setViperConfig()
 	if result != CfgFilePath {
-		t.Errorf("expected \n%s \n but got\n%s", CfgFilePath, result)
+		test.Errorf("expected \n%s \n but got\n%s", CfgFilePath, result)
 	}
 
 	if !strings.Contains(logResult, "Using config file: "+configFileUsed) {
-		t.Errorf("expected \n%s \n to contain\n%s", logResult, configFileUsed)
+		test.Errorf("expected \n%s \n to contain\n%s", logResult, configFileUsed)
 	}
 }
 
-func TestSetViperConfigWithoutConfigFilePath(t *testing.T) {
+func TestSetViperConfigWithoutConfigFilePath(test *testing.T) {
 	var logResult string
 	var addConfigPathResult string
 	var setConfigNameResult string
@@ -428,7 +429,7 @@ func TestSetViperConfigWithoutConfigFilePath(t *testing.T) {
 
 	setViperConfig()
 	if addConfigPathResult != "homedir" && setConfigNameResult != configFileUsed {
-		t.Errorf(
+		test.Errorf(
 			"expected config path \n%s \n but was\n%s"+
 				"\nexpected config name \n%s but was\n%s",
 			addConfigPathResult,
@@ -439,22 +440,22 @@ func TestSetViperConfigWithoutConfigFilePath(t *testing.T) {
 	}
 
 	if !strings.Contains(logResult, "Using config file: "+configFileUsed) {
-		t.Errorf("expected \n%s \n to contain\n%s", configFileUsed, logResult)
+		test.Errorf("expected \n%s \n to contain\n%s", configFileUsed, logResult)
 	}
 }
 
-func TestSetEnvVariables(t *testing.T) {
+func TestSetEnvVariables(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	var funcInvoked bool
 	automaticEnvFunc = func() { funcInvoked = true }
 
 	setEnvVariables()
 	if !funcInvoked {
-		t.Error("expected to invoke function but did not")
+		test.Error("expected to invoke function but did not")
 	}
 }
 
-func TestReadConfigFileSuccess(t *testing.T) {
+func TestReadConfigFileSuccess(test *testing.T) {
 	var result string
 	configFileUsed = "Using config file: .mstd.yml"
 	logMock = func(in string) { result = in }
@@ -464,11 +465,11 @@ func TestReadConfigFileSuccess(t *testing.T) {
 	readConfigFile()
 
 	if !strings.Contains(result, configFileUsed) {
-		t.Errorf("expected \n%s \n to contain\n%s", configFileUsed, result)
+		test.Errorf("expected \n%s \n to contain\n%s", configFileUsed, result)
 	}
 }
 
-func TestReadConfigFileFailure(t *testing.T) {
+func TestReadConfigFileFailure(test *testing.T) {
 	var result error
 	err := errors.New("Cannot read in config")
 	configErr = err
@@ -479,11 +480,11 @@ func TestReadConfigFileFailure(t *testing.T) {
 	readConfigFile()
 
 	if result != err {
-		t.Errorf("expected error\n%s \n but got\n%s", result.Error(), configErr.Error())
+		test.Errorf("expected error\n%s \n but got\n%s", result.Error(), configErr.Error())
 	}
 }
 
-func TestValidateConfigFileAttributesSuccess(t *testing.T) {
+func TestValidateConfigFileAttributesSuccess(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -492,11 +493,11 @@ func TestValidateConfigFileAttributesSuccess(t *testing.T) {
 
 	validateConfigFileAttributes()
 	if result != nil {
-		t.Errorf("expected no errors\n \n but got\n%s", result.Error())
+		test.Errorf("expected no errors\n \n but got\n%s", result.Error())
 	}
 }
 
-func TestValidateConfigFileAttributesClientIdFailure(t *testing.T) {
+func TestValidateConfigFileAttributesClientIdFailure(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -512,11 +513,11 @@ func TestValidateConfigFileAttributesClientIdFailure(t *testing.T) {
 
 	validateConfigFileAttributes()
 	if result == nil {
-		t.Errorf("expected %s\n \n but got\nnil", err.Error())
+		test.Errorf("expected %s\n \n but got\nnil", err.Error())
 	}
 }
 
-func TestValidateConfigFileAttributesClientSecretFailure(t *testing.T) {
+func TestValidateConfigFileAttributesClientSecretFailure(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -532,11 +533,11 @@ func TestValidateConfigFileAttributesClientSecretFailure(t *testing.T) {
 
 	validateConfigFileAttributes()
 	if result == nil {
-		t.Errorf("expected %s\n \n but got\nnil", err.Error())
+		test.Errorf("expected %s\n \n but got\nnil", err.Error())
 	}
 }
 
-func TestValidateConfigFileAttributesClientPermissionsFailure(t *testing.T) {
+func TestValidateConfigFileAttributesClientPermissionsFailure(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -552,11 +553,11 @@ func TestValidateConfigFileAttributesClientPermissionsFailure(t *testing.T) {
 
 	validateConfigFileAttributes()
 	if result == nil {
-		t.Errorf("expected %s\n \n but got\nnil", err.Error())
+		test.Errorf("expected %s\n \n but got\nnil", err.Error())
 	}
 }
 
-func TestValidateClientIdConfigPresenceSuccess(t *testing.T) {
+func TestValidateClientIdConfigPresenceSuccess(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -565,11 +566,11 @@ func TestValidateClientIdConfigPresenceSuccess(t *testing.T) {
 
 	validateClientIdConfigPresence()
 	if result != nil {
-		t.Errorf("expected no errors\n \n but got\n%s", result.Error())
+		test.Errorf("expected no errors\n \n but got\n%s", result.Error())
 	}
 }
 
-func TestValidateClientIdConfigPresenceFailure(t *testing.T) {
+func TestValidateClientIdConfigPresenceFailure(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -584,11 +585,11 @@ func TestValidateClientIdConfigPresenceFailure(t *testing.T) {
 
 	validateClientIdConfigPresence()
 	if result == nil {
-		t.Errorf("expected \n%s \n but got\nnil", err.Error())
+		test.Errorf("expected \n%s \n but got\nnil", err.Error())
 	}
 }
 
-func TestValidateClientSecretConfigPresenceSuccess(t *testing.T) {
+func TestValidateClientSecretConfigPresenceSuccess(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -597,11 +598,11 @@ func TestValidateClientSecretConfigPresenceSuccess(t *testing.T) {
 
 	validateClientSecretConfigPresence()
 	if result != nil {
-		t.Errorf("expected no errors\n \n but got\n%s", result.Error())
+		test.Errorf("expected no errors\n \n but got\n%s", result.Error())
 	}
 }
 
-func TestValidateClientSecretConfigPresenceFailure(t *testing.T) {
+func TestValidateClientSecretConfigPresenceFailure(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -616,11 +617,11 @@ func TestValidateClientSecretConfigPresenceFailure(t *testing.T) {
 
 	validateClientSecretConfigPresence()
 	if result == nil {
-		t.Errorf("expected \n%s \n but got\nnil", err.Error())
+		test.Errorf("expected \n%s \n but got\nnil", err.Error())
 	}
 }
 
-func TestValidateClientConfigPermissionsPresenceSuccess(t *testing.T) {
+func TestValidateClientConfigPermissionsPresenceSuccess(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -629,11 +630,11 @@ func TestValidateClientConfigPermissionsPresenceSuccess(t *testing.T) {
 
 	validateClientPermissionsConfigPresence()
 	if result != nil {
-		t.Errorf("expected no errors\n \n but got\n%s", result.Error())
+		test.Errorf("expected no errors\n \n but got\n%s", result.Error())
 	}
 }
 
-func TestValidateClientPermissionsConfigPresenceFailure(t *testing.T) {
+func TestValidateClientPermissionsConfigPresenceFailure(test *testing.T) {
 	viper.Client = ViperServiceMock{}
 	log.Client = LoggerServiceMock{}
 	var result error = nil
@@ -648,20 +649,20 @@ func TestValidateClientPermissionsConfigPresenceFailure(t *testing.T) {
 
 	validateClientPermissionsConfigPresence()
 	if result == nil {
-		t.Errorf("expected \n%s \n but got\nnil", err.Error())
+		test.Errorf("expected \n%s \n but got\nnil", err.Error())
 	}
 }
 
-func TestHomedirSuccess(t *testing.T) {
+func TestHomedirSuccess(test *testing.T) {
 	homedir.Client = HomedirServiceMock{}
 
 	result := homeDir()
 	if result != homedirPath {
-		t.Errorf("expected \n%s \n but got\n%s", result, homedirPath)
+		test.Errorf("expected \n%s \n but got\n%s", result, homedirPath)
 	}
 }
 
-func TestHomedirFailure(t *testing.T) {
+func TestHomedirFailure(test *testing.T) {
 	homedir.Client = HomedirServiceMock{}
 
 	var resultErr error
@@ -671,26 +672,26 @@ func TestHomedirFailure(t *testing.T) {
 
 	homeDir()
 	if resultErr != homedirErr {
-		t.Errorf("expected \n%s \n but got\n%s", resultErr.Error(), homedirErr.Error())
+		test.Errorf("expected \n%s \n but got\n%s", resultErr.Error(), homedirErr.Error())
 	}
 }
 
-func testAccessorMethodFor(method func() string, stubValue string, t *testing.T) {
+func testAccessorMethodFor(method func() string, stubValue string, test *testing.T) {
 	getString = stubValue
 
 	viper.Client = ViperServiceMock{}
 
 	result := method()
 	if result != getString {
-		t.Errorf("expected \n%s \n but got\n%s", getString, result)
+		test.Errorf("expected \n%s \n but got\n%s", getString, result)
 	}
 }
 
-func TestUnixTimeAfter(t *testing.T) {
+func TestUnixTimeAfter(test *testing.T) {
 	testTime, err := time.Parse(time.RFC3339, "2020-12-10T09:15:23Z")
 
 	if err != nil {
-		t.Error(err)
+		test.Error(err)
 	}
 
 	// The unix timestamp equivalent of the testTime + 5 seconds
@@ -698,15 +699,15 @@ func TestUnixTimeAfter(t *testing.T) {
 
 	fiveSecodsDuration, err := time.ParseDuration("5s")
 	if err != nil {
-		t.Error(err)
+		test.Error(err)
 	}
 
-	tm.Client = TimeMock{}
-	timeNowMockFunc = func() time.Time { return testTime }
+	t.Client = tt.TimeMock{}
+	tt.TimeNowMockFunc = func() time.Time { return testTime }
 
 	result := unixTimeAfter(fiveSecodsDuration)
 
 	if result != expectedResult {
-		t.Errorf("expected \n%d \n but got\n%d", expectedResult, result)
+		test.Errorf("expected \n%d \n but got\n%d", expectedResult, result)
 	}
 }
