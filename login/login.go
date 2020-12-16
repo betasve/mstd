@@ -13,12 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package app
+package login
 
 import (
 	"encoding/json"
 	"fmt"
-	l "github.com/betasve/mstd/logger"
+	"github.com/betasve/mstd/app"
+	conf "github.com/betasve/mstd/conf"
+	l "github.com/betasve/mstd/log"
+	t "github.com/betasve/mstd/time"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
@@ -55,9 +58,9 @@ var appId = "b1a43d92-35c5-4654-ab80-1380211060a1"
 var permissions = "Tasks.ReadWrite,offline_access"
 
 // TODO: Add logout command to remove attributes from conf file
-func Login() {
-	if alreadyLogedIn() {
-		l.Client.Log("You are already logged in. If you want to log in anew, please use the logut command first.")
+func Perform() {
+	if alreadyLoggedIn() {
+		l.Client.Println("You are already logged in. If you want to log in anew, please use the logut command first.")
 		os.Exit(0)
 	}
 
@@ -92,7 +95,7 @@ func Login() {
 		log.Fatal(err)
 	}
 
-	CallbackListen(callbackPath, authCallbackFn)
+	app.CallbackListen(callbackPath, authCallbackFn)
 }
 
 func authCallbackFn(authKey string) string {
@@ -211,6 +214,9 @@ func refreshToken() string {
 	return "s"
 }
 
-func alreadyLogedIn() bool {
-	return true
+func alreadyLoggedIn() bool {
+	return ((len(conf.CurrentState.AccessToken) != 0 &&
+		t.Client.Now().Before(conf.CurrentState.AccessTokenExpiresAt)) ||
+		(len(conf.CurrentState.RefreshToken) != 0 &&
+			t.Client.Now().Before(conf.CurrentState.RefreshTokenExpiresAt)))
 }
