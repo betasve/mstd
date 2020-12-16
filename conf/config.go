@@ -3,7 +3,7 @@ package conf
 import (
 	"fmt"
 	"github.com/betasve/mstd/homedir"
-	log "github.com/betasve/mstd/logger"
+	log "github.com/betasve/mstd/log"
 	tm "github.com/betasve/mstd/time"
 	"github.com/betasve/mstd/viper"
 	"strconv"
@@ -156,7 +156,7 @@ func setEnvVariables() {
 
 func readConfigFile() {
 	if err := viper.Client.ReadInConfig(); err == nil {
-		log.Client.Log(fmt.Sprintf("Using config file: %s", viper.Client.ConfigFileUsed()))
+		log.Client.Println(fmt.Sprintf("Using config file: %s", viper.Client.ConfigFileUsed()))
 	} else {
 		log.Client.Fatal(err)
 	}
