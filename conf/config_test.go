@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/betasve/mstd/homedir"
-	log "github.com/betasve/mstd/log"
+	homedirtest "github.com/betasve/mstd/homedir/homedirtest"
+	"github.com/betasve/mstd/log"
 	logtest "github.com/betasve/mstd/log/logtest"
 	t "github.com/betasve/mstd/time"
 	tt "github.com/betasve/mstd/time/timetest"
@@ -655,25 +656,25 @@ func TestValidateClientPermissionsConfigPresenceFailure(test *testing.T) {
 }
 
 func TestHomedirSuccess(test *testing.T) {
-	homedir.Client = HomedirServiceMock{}
+	homedir.Client = homedirtest.HomedirServiceMock{}
 
 	result := homeDir()
-	if result != homedirPath {
-		test.Errorf("expected \n%s \n but got\n%s", result, homedirPath)
+	if result != homedirtest.HomedirPath {
+		test.Errorf("expected \n%s \n but got\n%s", result, homedirtest.HomedirPath)
 	}
 }
 
 func TestHomedirFailure(test *testing.T) {
-	homedir.Client = HomedirServiceMock{}
+	homedir.Client = homedirtest.HomedirServiceMock{}
 
 	var resultErr error
-	homedirErr = errors.New("No homedir")
-	logtest.FatalMock = func(in ...interface{}) { resultErr = homedirErr }
+	homedirtest.HomedirErr = errors.New("No homedir")
+	logtest.FatalMock = func(in ...interface{}) { resultErr = homedirtest.HomedirErr }
 	log.Client = logtest.LoggerServiceMock{}
 
 	homeDir()
-	if resultErr != homedirErr {
-		test.Errorf("expected \n%s \n but got\n%s", resultErr.Error(), homedirErr.Error())
+	if resultErr != homedirtest.HomedirErr {
+		test.Errorf("expected \n%s \n but got\n%s", resultErr.Error(), homedirtest.HomedirErr.Error())
 	}
 }
 

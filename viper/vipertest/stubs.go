@@ -1,4 +1,4 @@
-package conftest
+package vipertest
 
 var AddConfigPathFunc, SetConfigNameFunc, SetCfgFilePathFunc func(in string)
 var AutomaticEnvFunc func()
