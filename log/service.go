@@ -7,12 +7,17 @@ import (
 var Client LoggerService = Logger{}
 
 type LoggerService interface {
+	Printf(format string, in ...interface{})
 	Println(v ...interface{})
 	Fatal(in ...interface{})
 	Fatalf(format string, in ...interface{})
 }
 
 type Logger struct{}
+
+func (l Logger) Printf(s string, v ...interface{}) {
+	log.Printf(s, v...)
+}
 
 func (l Logger) Println(v ...interface{}) {
 	log.Println(v...)

@@ -20,21 +20,18 @@ import (
 	"fmt"
 	"github.com/betasve/mstd/app"
 	conf "github.com/betasve/mstd/conf"
+	exec "github.com/betasve/mstd/exec"
 	l "github.com/betasve/mstd/log"
+	"github.com/betasve/mstd/runtime"
 	t "github.com/betasve/mstd/time"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
 	"net/http"
 	uri "net/url"
-	"os"
-	"os/exec"
-	"runtime"
 	"strconv"
 	"strings"
 )
-
-var url string
 
 type auth struct {
 	TokenType    string `json:"token_type"`
@@ -55,47 +52,50 @@ var authRequestPath = "/authorize"
 var tokenRequestPath = "/token"
 
 var appId = "b1a43d92-35c5-4654-ab80-1380211060a1"
-var permissions = "Tasks.ReadWrite,offline_access"
 
 // TODO: Add logout command to remove attributes from conf file
 func Perform() {
 	if alreadyLoggedIn() {
 		l.Client.Println("You are already logged in. If you want to log in anew, please use the logut command first.")
-		os.Exit(0)
+		return
 	}
 
-	// TODO: Interpolate string with variables
+	openLoginUrl(prepareLoginUrl())
+
+	app.CallbackListen(callbackPath, authCallbackFn)
+}
+
+func prepareLoginUrl() string {
 	redirectUri := uri.Values{}
 	redirectUri.Add("redirect_uri", CallbackUrl)
 
-	url =
-		baseRequestUrl + authRequestPath +
-			"?client_id=" + appId +
-			"&response_type=code" +
-			"&" + redirectUri.Encode() +
-			"&response_mode=query" +
-			"&scope=" + permissions +
-			"&state=12345"
+	return fmt.Sprintf(
+		"%s%s?client_id=%s&response_type=code&%s&response_mode=query&scope=%s&state=12345",
+		baseRequestUrl,
+		authRequestPath,
+		conf.CurrentState.ClientId,
+		redirectUri.Encode(),
+		conf.CurrentState.Permissions,
+	)
+}
 
+func openLoginUrl(url string) {
 	var err error
 
-	switch runtime.GOOS {
+	switch runtime.Client.GetOS() {
 	case "linux":
-		err = exec.Command("xdg-open", url).Run()
+		err = exec.CmdClient.Command("xdg-open", url).Run()
 	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Run()
+		err = exec.CmdClient.Command("rundll32", "url.dll,FileProtocolHandler", url).Run()
 	case "darwin":
-		err = exec.Command("open", url).Run()
+		err = exec.CmdClient.Command("open", url).Run()
 	default:
-		log.Printf("Please visit \n\r %s \n\r and login.", url)
+		l.Client.Printf("Please visit \n\r %s \n\r and login.", url)
 	}
 
 	if err != nil {
-		fmt.Println(err)
-		log.Fatal(err)
+		l.Client.Fatal(err)
 	}
-
-	app.CallbackListen(callbackPath, authCallbackFn)
 }
 
 func authCallbackFn(authKey string) string {
