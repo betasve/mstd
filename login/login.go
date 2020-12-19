@@ -42,9 +42,7 @@ type auth struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// TODO: export callback path to settings
-var callbackPath = "/login/authorized"
-var CallbackUrl = conf.CurrentState.AuthCallbackHost + callbackPath
+var CallbackUrl = conf.CurrentState.AuthCallbackHost + conf.CurrentState.AuthCallbackPath
 
 var baseRequestUrl = "https://login.microsoftonline.com/common/oauth2/v2.0"
 var authRequestPath = "/authorize"
@@ -61,7 +59,7 @@ func Perform() {
 
 	openLoginUrl(prepareLoginUrl())
 
-	app.CallbackListen(callbackPath, authCallbackFn)
+	app.CallbackListen(conf.CurrentState.AuthCallbackPath, authCallbackFn)
 }
 
 func prepareLoginUrl() string {
@@ -103,7 +101,7 @@ func authCallbackFn(authKey string) string {
 	data.Set("client_id", appId)
 	data.Set("scope", "Tasks.ReadWrite.Shared,offline_access")
 	data.Set("code", authKey)
-	data.Set("redirect_uri", callbackHost+callbackPath)
+	data.Set("redirect_uri", conf.CurrentState.AuthCallbackHost+conf.CurrentState.AuthCallbackPath)
 	data.Set("grant_type", "authorization_code")
 	data.Set("client_secret", "0v8Ag1_FPYO70~l.Ect_G69v-qHmTDV~cN")
 

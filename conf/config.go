@@ -17,6 +17,7 @@ const defaultPermissionsConfig string = "permissions"
 const defaultAccessTokenConfig string = "access_token"
 const defaultRefreshTokenConfig string = "refresh_token"
 const defaultAuthCallbackHost string = "auth_callback_host_and_port"
+const defaultAuthCallbackPath string = "auth_callback_path"
 const defaultAccessTokenExpiryConfig string = "ate"
 const defaultRefreshTokenExpiryConfig string = "rte"
 const nanosecondsInASecond int64 = 1_000_000_000
@@ -32,6 +33,7 @@ type State struct {
 	AccessTokenExpiresAt  t.Time
 	RefreshTokenExpiresAt t.Time
 	AuthCallbackHost      string
+	AuthCallbackPath      string
 }
 
 var CurrentState = State{}
@@ -79,6 +81,10 @@ func GetClientRefreshTokenExpiry() t.Time {
 
 func GetAuthCallbackHost() string {
 	return viper.Client.GetString(defaultAuthCallbackHost)
+}
+
+func GetAuthCallbackPath() string {
+	return viper.Client.GetString(defaultAuthCallbackPath)
 }
 
 func SetClientAccessToken(in string) {
@@ -134,6 +140,7 @@ func populateCurrentState() {
 	CurrentState.AccessTokenExpiresAt = GetClientAccessTokenExpiry()
 	CurrentState.RefreshTokenExpiresAt = GetClientRefreshTokenExpiry()
 	CurrentState.AuthCallbackHost = GetAuthCallbackHost()
+	CurrentState.AuthCallbackPath = GetAuthCallbackPath()
 }
 
 func secondsToDuration(s int) t.Duration {
@@ -176,6 +183,7 @@ func validateConfigFileAttributes() {
 	validateClientSecretConfigPresence()
 	validateClientPermissionsConfigPresence()
 	validateAuthCallbackHostConfigPresence()
+	validateAuthCallbackPathConfigPresence()
 }
 
 func validateClientIdConfigPresence() {
@@ -199,6 +207,12 @@ func validateClientPermissionsConfigPresence() {
 func validateAuthCallbackHostConfigPresence() {
 	if len(GetAuthCallbackHost()) == 0 {
 		log.Client.Fatalf("Missing %s in config file", defaultAuthCallbackHost)
+	}
+}
+
+func validateAuthCallbackPathConfigPresence() {
+	if len(GetAuthCallbackPath()) == 0 {
+		log.Client.Fatalf("Missing %s in config file", defaultAuthCallbackPath)
 	}
 }
 
