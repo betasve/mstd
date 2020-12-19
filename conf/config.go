@@ -16,6 +16,7 @@ const defaultClientSecretConfig string = "client_secret"
 const defaultPermissionsConfig string = "permissions"
 const defaultAccessTokenConfig string = "access_token"
 const defaultRefreshTokenConfig string = "refresh_token"
+const defaultAuthCallbackHost string = "auth_callback_host_and_port"
 const defaultAccessTokenExpiryConfig string = "ate"
 const defaultRefreshTokenExpiryConfig string = "rte"
 const nanosecondsInASecond int64 = 1_000_000_000
@@ -30,6 +31,7 @@ type State struct {
 	RefreshToken          string
 	AccessTokenExpiresAt  t.Time
 	RefreshTokenExpiresAt t.Time
+	AuthCallbackHost      string
 }
 
 var CurrentState = State{}
@@ -73,6 +75,10 @@ func GetClientRefreshTokenExpiry() t.Time {
 	expires := viper.Client.GetInt64(defaultRefreshTokenExpiryConfig)
 
 	return t.Unix(expires, 0)
+}
+
+func GetAuthCallbackHost() string {
+	return viper.Client.GetString(defaultAuthCallbackHost)
 }
 
 func SetClientAccessToken(in string) {
@@ -127,6 +133,7 @@ func populateCurrentState() {
 	CurrentState.RefreshToken = GetClientRefreshToken()
 	CurrentState.AccessTokenExpiresAt = GetClientAccessTokenExpiry()
 	CurrentState.RefreshTokenExpiresAt = GetClientRefreshTokenExpiry()
+	CurrentState.AuthCallbackHost = GetAuthCallbackHost()
 }
 
 func secondsToDuration(s int) t.Duration {
@@ -162,10 +169,13 @@ func readConfigFile() {
 	}
 }
 
+// TODO: Improve method to return accumulated error
+// by improving each validation to return error on its own
 func validateConfigFileAttributes() {
 	validateClientIdConfigPresence()
 	validateClientSecretConfigPresence()
 	validateClientPermissionsConfigPresence()
+	validateAuthCallbackHostConfigPresence()
 }
 
 func validateClientIdConfigPresence() {
@@ -183,6 +193,12 @@ func validateClientSecretConfigPresence() {
 func validateClientPermissionsConfigPresence() {
 	if len(GetClientPermissions()) == 0 {
 		log.Client.Fatalf("Missing %s in config file", defaultPermissionsConfig)
+	}
+}
+
+func validateAuthCallbackHostConfigPresence() {
+	if len(GetAuthCallbackHost()) == 0 {
+		log.Client.Fatalf("Missing %s in config file", defaultAuthCallbackHost)
 	}
 }
 

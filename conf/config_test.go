@@ -61,6 +61,10 @@ func TestGetClientRefreshToken(test *testing.T) {
 	testAccessorMethodFor(GetClientRefreshToken, defaultRefreshTokenConfig, test)
 }
 
+func TestGetAuthCallbackHost(test *testing.T) {
+	testAccessorMethodFor(GetAuthCallbackHost, defaultAuthCallbackHost, test)
+}
+
 func TestGetClientAccessTokenExpirySuccess(test *testing.T) {
 	vt.GetString = "1607534638"
 	result := GetClientAccessTokenExpiry()
@@ -490,9 +494,25 @@ func TestValidateConfigFileAttributesSuccess(test *testing.T) {
 	viper.Client = vt.ViperServiceMock{}
 	log.Client = logtest.LoggerServiceMock{}
 	var result error = nil
-	logtest.FatalMock = func(in ...interface{}) { result = errors.New("invalid call") }
-	vt.GetString = "clientId"
+	logtest.FatalfMock = func(s string, in ...interface{}) { result = errors.New("invalid call") }
+	vt.GetString = ""
+	vt.GetStringFunc = func(in string) string {
+		switch in {
+		case defaultClientIdConfig:
+			return "test-client-id"
+		case defaultClientSecretConfig:
+			return "test-client-secret"
+		case defaultPermissionsConfig:
+			return "test.client.permissions"
+		case defaultAuthCallbackHost:
+			return "http://test-host:3000"
+		default:
+			test.Log("gets in default")
+			return ""
+		}
+	}
 
+	test.Log(GetAuthCallbackHost())
 	validateConfigFileAttributes()
 	if result != nil {
 		test.Errorf("expected no errors\n \n but got\n%s", result.Error())
@@ -547,6 +567,26 @@ func TestValidateConfigFileAttributesClientPermissionsFailure(test *testing.T) {
 	logtest.FatalfMock = func(f string, in ...interface{}) { result = err }
 	vt.GetStringFunc = func(key string) string {
 		if key == defaultPermissionsConfig {
+			return ""
+		} else {
+			return "clientPermissions"
+		}
+	}
+
+	validateConfigFileAttributes()
+	if result == nil {
+		test.Errorf("expected %s\n \n but got\nnil", err.Error())
+	}
+}
+
+func TestValidateConfigFileAttributesAuthCallbackHostFailure(test *testing.T) {
+	viper.Client = vt.ViperServiceMock{}
+	log.Client = logtest.LoggerServiceMock{}
+	var result error = nil
+	err := errors.New("missing auth callack host")
+	logtest.FatalfMock = func(f string, in ...interface{}) { result = err }
+	vt.GetStringFunc = func(key string) string {
+		if key == defaultAuthCallbackHost {
 			return ""
 		} else {
 			return "clientPermissions"

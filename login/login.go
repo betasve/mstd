@@ -42,10 +42,9 @@ type auth struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// TODO: export host and port to settings
-var callbackHost = "http://localhost:8080"
+// TODO: export callback path to settings
 var callbackPath = "/login/authorized"
-var CallbackUrl = callbackHost + callbackPath
+var CallbackUrl = conf.CurrentState.AuthCallbackHost + callbackPath
 
 var baseRequestUrl = "https://login.microsoftonline.com/common/oauth2/v2.0"
 var authRequestPath = "/authorize"
