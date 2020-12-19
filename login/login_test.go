@@ -41,13 +41,14 @@ func TestPerformFailWhenAlreadyLoggedIn(test *testing.T) {
 
 func TestPrepareLoginUrl(test *testing.T) {
 	conf.CurrentState = conf.State{
-		ClientId:    "client-id",
-		Permissions: "Some.Permissions",
+		ClientId:         "client-id",
+		Permissions:      "Some.Permissions",
+		AuthCallbackHost: "http://localhost:3000",
+		AuthCallbackPath: "/callback",
 	}
 
 	baseRequestUrl = "http://test.com"
 	authRequestPath = "/authorize"
-	CallbackUrl = "http://localhost:3000/callback"
 
 	result := prepareLoginUrl()
 	expectedResult := "http://test.com/authorize?client_id=client-id" +

@@ -42,13 +42,9 @@ type auth struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-var CallbackUrl = conf.CurrentState.AuthCallbackHost + conf.CurrentState.AuthCallbackPath
-
 var baseRequestUrl = "https://login.microsoftonline.com/common/oauth2/v2.0"
 var authRequestPath = "/authorize"
 var tokenRequestPath = "/token"
-
-var appId = "b1a43d92-35c5-4654-ab80-1380211060a1"
 
 // TODO: Add logout command to remove attributes from conf file
 func Perform() {
@@ -64,8 +60,13 @@ func Perform() {
 
 func prepareLoginUrl() string {
 	redirectUri := uri.Values{}
-	redirectUri.Add("redirect_uri", CallbackUrl)
+	redirectUri.Add(
+		"redirect_uri",
+		conf.CurrentState.AuthCallbackHost+
+			conf.CurrentState.AuthCallbackPath,
+	)
 
+	log.Println()
 	return fmt.Sprintf(
 		"%s%s?client_id=%s&response_type=code&%s&response_mode=query&scope=%s&state=12345",
 		baseRequestUrl,
@@ -98,7 +99,7 @@ func openLoginUrl(url string) {
 func authCallbackFn(authKey string) string {
 	endpoint := baseRequestUrl + tokenRequestPath
 	data := uri.Values{}
-	data.Set("client_id", appId)
+	data.Set("client_id", conf.CurrentState.ClientId)
 	data.Set("scope", "Tasks.ReadWrite.Shared,offline_access")
 	data.Set("code", authKey)
 	data.Set("redirect_uri", conf.CurrentState.AuthCallbackHost+conf.CurrentState.AuthCallbackPath)
@@ -159,7 +160,7 @@ func authCallbackFn(authKey string) string {
 func refreshToken() string {
 	endpoint := baseRequestUrl + tokenRequestPath
 	data := uri.Values{}
-	data.Set("client_id", appId)
+	data.Set("client_id", conf.CurrentState.ClientId)
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", viper.GetString("refresh_token"))
 	data.Set("client_secret", "0v8Ag1_FPYO70~l.Ect_G69v-qHmTDV~cN")
