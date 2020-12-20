@@ -27,7 +27,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	uri "net/url"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -59,7 +59,7 @@ func Perform() {
 }
 
 func prepareLoginUrl() string {
-	urlParams := uri.Values{}
+	urlParams := url.Values{}
 
 	urlParams.Add("client_id", conf.CurrentState.ClientId)
 	urlParams.Add("response_type", "code")
@@ -99,30 +99,10 @@ func openLoginUrl(url string) {
 }
 
 func authCallbackFn(authKey string) string {
-	endpoint := baseRequestUrl + tokenRequestPath
-	data := uri.Values{}
-	data.Set("client_id", conf.CurrentState.ClientId)
-	data.Set("scope", "Tasks.ReadWrite.Shared,offline_access")
-	data.Set("code", authKey)
-	data.Set("redirect_uri", conf.CurrentState.AuthCallbackHost+conf.CurrentState.AuthCallbackPath)
-	data.Set("grant_type", "authorization_code")
-	data.Set("client_secret", "0v8Ag1_FPYO70~l.Ect_G69v-qHmTDV~cN")
+	request := buildRequestObjectForAccessToken(authKey)
 
 	client := &http.Client{}
-	r, err := http.NewRequest(
-		"POST",
-		endpoint,
-		strings.NewReader(data.Encode()),
-	)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
-
-	res, err := client.Do(r)
+	res, err := client.Do(request)
 
 	if err != nil {
 		log.Fatal(err)
@@ -159,9 +139,41 @@ func authCallbackFn(authKey string) string {
 	}
 }
 
+// TODO: Cover with tests
+func buildRequestBodyForAuthToken(authKey string) url.Values {
+	data := url.Values{}
+	data.Set("client_id", conf.CurrentState.ClientId)
+	data.Set("scope", "Tasks.ReadWrite.Shared,offline_access")
+	data.Set("code", authKey)
+	data.Set("redirect_uri", conf.CurrentState.AuthCallbackHost+conf.CurrentState.AuthCallbackPath)
+	data.Set("grant_type", "authorization_code")
+	data.Set("client_secret", "0v8Ag1_FPYO70~l.Ect_G69v-qHmTDV~cN")
+
+	return data
+}
+
+// TODO: Cover with tests
+func buildRequestObjectForAccessToken(authKey string) *http.Request {
+	urlEncodedParams := buildRequestBodyForAuthToken(authKey).Encode()
+	request, err := http.NewRequest(
+		"POST",
+		baseRequestUrl+tokenRequestPath,
+		strings.NewReader(urlEncodedParams),
+	)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	request.Header.Add("Content-Length", strconv.Itoa(len(urlEncodedParams)))
+
+	return request
+}
+
 func refreshToken() string {
 	endpoint := baseRequestUrl + tokenRequestPath
-	data := uri.Values{}
+	data := url.Values{}
 	data.Set("client_id", conf.CurrentState.ClientId)
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", viper.GetString("refresh_token"))
