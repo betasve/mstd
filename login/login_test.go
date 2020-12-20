@@ -52,7 +52,8 @@ func TestPrepareLoginUrl(test *testing.T) {
 
 	result := prepareLoginUrl()
 	expectedResult := "http://test.com/authorize?client_id=client-id" +
-		"&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback&response_mode=query&scope=Some.Permissions&state=12345"
+		"&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback" +
+		"&response_mode=query&response_type=code&scope=Some.Permissions"
 
 	if result != expectedResult {
 		test.Errorf("\nexpected\n%s\nbut got\n%s", expectedResult, result)

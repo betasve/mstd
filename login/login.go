@@ -18,7 +18,6 @@ package login
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/betasve/mstd/app"
 	conf "github.com/betasve/mstd/conf"
 	exec "github.com/betasve/mstd/exec"
 	l "github.com/betasve/mstd/log"
@@ -45,6 +44,7 @@ type auth struct {
 var baseRequestUrl = "https://login.microsoftonline.com/common/oauth2/v2.0"
 var authRequestPath = "/authorize"
 var tokenRequestPath = "/token"
+var callbackFn func(string) string
 
 // TODO: Add logout command to remove attributes from conf file
 func Perform() {
@@ -55,25 +55,27 @@ func Perform() {
 
 	openLoginUrl(prepareLoginUrl())
 
-	app.CallbackListen(conf.CurrentState.AuthCallbackPath, authCallbackFn)
+	CallbackListen(conf.CurrentState.AuthCallbackPath, authCallbackFn)
 }
 
 func prepareLoginUrl() string {
-	redirectUri := uri.Values{}
-	redirectUri.Add(
+	urlParams := uri.Values{}
+
+	urlParams.Add("client_id", conf.CurrentState.ClientId)
+	urlParams.Add("response_type", "code")
+	urlParams.Add(
 		"redirect_uri",
 		conf.CurrentState.AuthCallbackHost+
 			conf.CurrentState.AuthCallbackPath,
 	)
+	urlParams.Add("response_mode", "query")
+	urlParams.Add("scope", conf.CurrentState.Permissions)
 
-	log.Println()
 	return fmt.Sprintf(
-		"%s%s?client_id=%s&response_type=code&%s&response_mode=query&scope=%s&state=12345",
+		"%s%s?%s",
 		baseRequestUrl,
 		authRequestPath,
-		conf.CurrentState.ClientId,
-		redirectUri.Encode(),
-		conf.CurrentState.Permissions,
+		urlParams.Encode(),
 	)
 }
 
@@ -217,4 +219,32 @@ func alreadyLoggedIn() bool {
 		t.Client.Now().Before(conf.CurrentState.AccessTokenExpiresAt)) ||
 		(len(conf.CurrentState.RefreshToken) != 0 &&
 			t.Client.Now().Before(conf.CurrentState.RefreshTokenExpiresAt)))
+}
+
+func CallbackListen(callbackUrl string, cb func(string) string) {
+	callbackFn = cb
+
+	http.HandleFunc(callbackUrl, responder)
+	err := http.ListenAndServe(":8080", nil)
+
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+func responder(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	code := strings.Join(values["code"], "")
+
+	fmt.Fprint(
+		w,
+		"Successfully retrieved an authorization "+
+			"code \nContinuing with authorization process",
+	)
+
+	if code == "" {
+		return
+	}
+
+	callbackFn(code)
 }
