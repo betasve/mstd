@@ -93,6 +93,8 @@ func SetClientAccessToken(in string) {
 	if err != nil {
 		log.Client.Fatal(err.Error())
 	}
+
+	populateCurrentState()
 }
 
 func SetClientRefreshToken(in string) {
@@ -101,6 +103,8 @@ func SetClientRefreshToken(in string) {
 	if err != nil {
 		log.Client.Fatal(err.Error())
 	}
+
+	populateCurrentState()
 }
 
 func SetClientAccessTokenExpirySeconds(seconds int) {
@@ -115,6 +119,8 @@ func SetClientAccessTokenExpirySeconds(seconds int) {
 	if err != nil {
 		log.Client.Fatal(err.Error())
 	}
+
+	populateCurrentState()
 }
 
 func SetClientRefreshTokenExpirySeconds(seconds int) {
@@ -129,6 +135,8 @@ func SetClientRefreshTokenExpirySeconds(seconds int) {
 	if err != nil {
 		log.Client.Fatal(err.Error())
 	}
+
+	populateCurrentState()
 }
 
 func populateCurrentState() {
