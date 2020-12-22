@@ -31,7 +31,7 @@ import (
 	"strings"
 )
 
-type auth struct {
+type AuthData struct {
 	TokenType    string `json:"token_type"`
 	Scope        string `json:"scope"`
 	ExpiresIn    int    `json:"expires_in"`
@@ -47,20 +47,20 @@ var tokenRequestPath = "/token"
 var callbackFn func(string)
 
 // TODO: Add logout command to remove attributes from conf file
-func Perform() {
-	if alreadyLoggedIn() {
-		refreshTokenIfNeeded()
-
-		l.Client.Println("You are already logged in. If you want to log in anew, please use the logut command first.")
+func (c *Creds) Perform() error {
+	if c.alreadyLoggedIn() {
+		c.refreshTokenIfNeeded()
 	} else {
-		performLogin()
+		c.performLogin()
 	}
+
+	return nil
 }
 
-func performLogin() {
-	openLoginUrl(prepareLoginUrl())
+func (c *Creds) performLogin() {
+	c.openLoginUrl(prepareLoginUrl())
 
-	CallbackListen(conf.CurrentState.AuthCallbackPath, getAccessToken)
+	c.CallbackListen(conf.CurrentState.AuthCallbackPath, c.getAccessToken)
 }
 
 func prepareLoginUrl() string {
@@ -84,7 +84,7 @@ func prepareLoginUrl() string {
 	)
 }
 
-func openLoginUrl(url string) {
+func (c *Creds) openLoginUrl(url string) {
 	var err error
 
 	switch runtime.Client.GetOS() {
@@ -103,22 +103,7 @@ func openLoginUrl(url string) {
 	}
 }
 
-// TODO: To replace with a hook function
-func writeDataToConfigFile(a *auth) {
-	// TODO: Set those via externally with a callback func
-	conf.SetClientAccessToken(a.AccessToken)
-	conf.SetClientAccessTokenExpirySeconds(a.ExpiresIn)
-
-	conf.SetClientRefreshToken(a.RefreshToken)
-	expiryDaysToHours := 200 * 24
-	day200, err := t.Client.ParseDuration(fmt.Sprintf("%dh", expiryDaysToHours))
-	if err != nil {
-		l.Client.Fatal(err)
-	}
-	conf.SetClientRefreshTokenExpirySeconds(int(day200.Seconds()))
-}
-
-func getAccessToken(authKey string) {
+func (c *Creds) getAccessToken(authKey string) {
 	request := buildRequestObjectWithEncodedParams(
 		baseRequestUrl+tokenRequestPath,
 		buildRequestBodyForAuthToken(authKey).Encode(),
@@ -126,17 +111,17 @@ func getAccessToken(authKey string) {
 
 	// stubBody := []byte(`{"token_type":"Bearer","scope":"Tasks.ReadWrite.Shared Tasks.ReadWrite User.Read Mail.Read","expires_in":3600,"ext_expires_in":3600,"access_token":"EwBgA8l6BAAU6k7+XVQzkGyMv7VHB/h4cHbJYRAAAdP4XTitRFcSaCEkgaktzueLC4mJdOBqwzWA6AQ4BlMofDsqwJfswAoD8eXnuoP80RMgW5ZM9h6Qg7gFlzSnMKaGMf9wDa51GMGK6o4Gf/Miyik8MiDvCjIQU0mDIad8dEsYFfNv9Mq6h/aOCZVgLeMgA2c6Mqnyd3ym8UMRU/0+Olk3pJa1amRhXXtJCzCtPru5bEwJfjNcsM8pLux4tqP4WRxzWuwaCFdKqAHQc7PkBnpC1qgkr8jJh7v2cuLGAA+EDbqYi66EO+KxlaMe+wfbNkS36YBr3wwAOEdeu7K5zfK7pzge1SqSlQmxaSzZzRar0QhjkzoFbcjxFu6GMxsDZgAACG+mPO5XTOPCMAJA4uZFr7NTXI9IthKkUb+Dy31lUgT0V50sG/t8cRbI6fKOXpzzVgKLoNH+gcTaoRLAISq8mjwLBuBLU7eC5VoTInIDCNdQMYDzjPhj8SRVa8saBH/r4fuHMJfGAp0NEPyv3vPEH/ackLswawg9EUUxxjSgejawTmNP/H1UtGhPukfg6MVTpwA33N6E0urBEzwqANgtIXGMjDtfWKHGGUGFtBYSauftE7UAmukETjQD928Gyvm2Rq045AxmSJeRRlz1AUC6ffEf56jmEv/uOd4Eth+MGvwtsAA5wrCUXDjixFuyeghXmX8VduN+Q63+WoVjEl5f6XtrftSUeydSR40x6s9xFbvROiGssGxDK1hOCp8uF2fWyGl4x+x+d6vjt6t1Ha/L4duQkw4SxlQE58C22WTR0m4wtaN9zB1ovIrPtOf01+9kdkoowI017SoOBUQmUuSfGyjsLQnPvJi6Edp4KzFVHhJ/FfA5jvraVh4SgA7LyxiVCO1WIHYCXDamLqelIJ0W7mwcZB7snHH+gYXMACAzZcD1qf37O1QMuT6jUTUNe2jX5uh90QRFzYzOw819YX7rqb3Z8NytLSj+qkI9eetgpXplGnfipRloiXHBePVGAGrcigMLNc4Ny5DXIvqW0SJoQdLUqZUvzYKobf4BzFabr2rGLxU98zX/KKimw+IbBwQwzePdvdjPSWeZyUUhaX+TE0RiALAX82NnFz8dI6NXw/uj712ZIwtM1JJ9Dn4C","refresh_token":"M.R3_BAY.CVyjHHFi2Rrsv!vpgLLBhfs7SbGRhMu7TLdKA0wTBxsM1rX9Tggx8bzNizGx*vp5QdvZd8eP2hL5csx7BHhdZLwsHQ3CVfK9llk30wU1NKOiKoRuJThwudUNVsCkEZs2Xz53*Kb1RpErlHT44sVpwmh9ZFta3NXD70lJ4i2Jom1G7Ma8Ia4Ha149B0GtPpmdnlb7ENbHQAVEpkwBpZrJDDMG7PRrtLn3cG*C4QqtENtYUJbI!28JS378OQB1mMeEONEmVyrFz8nnwchGpNxY9JBo00uzh*12S3CwiDsiy2J3lYi*oQFNJsPhGbRmDhJTXo4ixtC!RULY1L8a33IVf7vmifKh!iaskVdDxGDJorcuW*Qxvt4ZC7gdl*18LHQBkcx7Rc3DLHxLLx!POTzI26FF5UV78B6LQnOOXYNRnSsd"}`)
 	body := sendRequest(request)
-	a := auth{}
+	a := AuthData{}
 
 	if err := json.Unmarshal(body, &a); err != nil {
 		log.Fatal(err)
 	}
 
-	writeDataToConfigFile(&a)
+	c.loginDataCallbackFn(&a)
 	l.Client.Println("Logged in successfully.\nPlease Ctr+C to exit.")
 }
 
-func getRefreshToken() {
+func (c *Creds) getRefreshToken() {
 	request := buildRequestObjectWithEncodedParams(
 		baseRequestUrl+tokenRequestPath,
 		buildRequestBodyForRefreshToken().Encode(),
@@ -144,7 +129,7 @@ func getRefreshToken() {
 
 	// stubBody := []byte(`{"token_type":"Bearer","scope":"Tasks.ReadWrite.Shared Tasks.ReadWrite User.Read Mail.Read","expires_in":3600,"ext_expires_in":3600,"access_token":"EwBgA8l6BAAU6k7+XVQzkGyMv7VHB/h4cHbJYRAAAdP4XTitRFcSaCEkgaktzueLC4mJdOBqwzWA6AQ4BlMofDsqwJfswAoD8eXnuoP80RMgW5ZM9h6Qg7gFlzSnMKaGMf9wDa51GMGK6o4Gf/Miyik8MiDvCjIQU0mDIad8dEsYFfNv9Mq6h/aOCZVgLeMgA2c6Mqnyd3ym8UMRU/0+Olk3pJa1amRhXXtJCzCtPru5bEwJfjNcsM8pLux4tqP4WRxzWuwaCFdKqAHQc7PkBnpC1qgkr8jJh7v2cuLGAA+EDbqYi66EO+KxlaMe+wfbNkS36YBr3wwAOEdeu7K5zfK7pzge1SqSlQmxaSzZzRar0QhjkzoFbcjxFu6GMxsDZgAACG+mPO5XTOPCMAJA4uZFr7NTXI9IthKkUb+Dy31lUgT0V50sG/t8cRbI6fKOXpzzVgKLoNH+gcTaoRLAISq8mjwLBuBLU7eC5VoTInIDCNdQMYDzjPhj8SRVa8saBH/r4fuHMJfGAp0NEPyv3vPEH/ackLswawg9EUUxxjSgejawTmNP/H1UtGhPukfg6MVTpwA33N6E0urBEzwqANgtIXGMjDtfWKHGGUGFtBYSauftE7UAmukETjQD928Gyvm2Rq045AxmSJeRRlz1AUC6ffEf56jmEv/uOd4Eth+MGvwtsAA5wrCUXDjixFuyeghXmX8VduN+Q63+WoVjEl5f6XtrftSUeydSR40x6s9xFbvROiGssGxDK1hOCp8uF2fWyGl4x+x+d6vjt6t1Ha/L4duQkw4SxlQE58C22WTR0m4wtaN9zB1ovIrPtOf01+9kdkoowI017SoOBUQmUuSfGyjsLQnPvJi6Edp4KzFVHhJ/FfA5jvraVh4SgA7LyxiVCO1WIHYCXDamLqelIJ0W7mwcZB7snHH+gYXMACAzZcD1qf37O1QMuT6jUTUNe2jX5uh90QRFzYzOw819YX7rqb3Z8NytLSj+qkI9eetgpXplGnfipRloiXHBePVGAGrcigMLNc4Ny5DXIvqW0SJoQdLUqZUvzYKobf4BzFabr2rGLxU98zX/KKimw+IbBwQwzePdvdjPSWeZyUUhaX+TE0RiALAX82NnFz8dI6NXw/uj712ZIwtM1JJ9Dn4C","refresh_token":"M.R3_BAY.CVyjHHFi2Rrsv!vpgLLBhfs7SbGRhMu7TLdKA0wTBxsM1rX9Tggx8bzNizGx*vp5QdvZd8eP2hL5csx7BHhdZLwsHQ3CVfK9llk30wU1NKOiKoRuJThwudUNVsCkEZs2Xz53*Kb1RpErlHT44sVpwmh9ZFta3NXD70lJ4i2Jom1G7Ma8Ia4Ha149B0GtPpmdnlb7ENbHQAVEpkwBpZrJDDMG7PRrtLn3cG*C4QqtENtYUJbI!28JS378OQB1mMeEONEmVyrFz8nnwchGpNxY9JBo00uzh*12S3CwiDsiy2J3lYi*oQFNJsPhGbRmDhJTXo4ixtC!RULY1L8a33IVf7vmifKh!iaskVdDxGDJorcuW*Qxvt4ZC7gdl*18LHQBkcx7Rc3DLHxLLx!POTzI26FF5UV78B6LQnOOXYNRnSsd"}`)
 	body := sendRequest(request)
-	a := auth{}
+	a := AuthData{}
 
 	if err := json.Unmarshal(body, &a); err != nil {
 		log.Fatal(err)
@@ -152,26 +137,26 @@ func getRefreshToken() {
 
 	log.Println(a.Scope)
 
-	writeDataToConfigFile(&a)
+	c.loginDataCallbackFn(&a)
 }
 
-func alreadyLoggedIn() bool {
-	return isAccessTokenValid() || isRefreshTokenValid()
+func (c *Creds) alreadyLoggedIn() bool {
+	return c.isAccessTokenValid() || c.isRefreshTokenValid()
 }
 
-func isAccessTokenValid() bool {
+func (c *Creds) isAccessTokenValid() bool {
 	return len(conf.CurrentState.AccessToken) != 0 &&
 		t.Client.Now().Before(conf.CurrentState.AccessTokenExpiresAt)
 }
 
-func isRefreshTokenValid() bool {
+func (c *Creds) isRefreshTokenValid() bool {
 	return len(conf.CurrentState.RefreshToken) != 0 &&
 		t.Client.Now().Before(conf.CurrentState.RefreshTokenExpiresAt)
 }
 
-func refreshTokenIfNeeded() {
-	if !isAccessTokenValid() {
-		getRefreshToken()
+func (c *Creds) refreshTokenIfNeeded() {
+	if !c.isAccessTokenValid() {
+		c.getRefreshToken()
 	}
 }
 
@@ -236,7 +221,7 @@ func sendRequest(req *http.Request) []byte {
 	return body
 }
 
-func CallbackListen(callbackUrl string, cb func(string)) {
+func (c *Creds) CallbackListen(callbackUrl string, cb func(string)) {
 	callbackFn = cb
 
 	http.HandleFunc(callbackUrl, responder)

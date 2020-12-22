@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/betasve/mstd/login"
+	"github.com/betasve/mstd/app"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +28,7 @@ var loginCmd = &cobra.Command{
 	recognized by the tool, you will be presented an url to copy/paste in
 	your browser`,
 	Run: func(cmd *cobra.Command, args []string) {
-		login.Perform()
+		app.Login()
 	},
 }
 
