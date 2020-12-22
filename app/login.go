@@ -22,7 +22,11 @@ func Login() {
 	creds.SetRefreshTokenExpiresAt(conf.CurrentState.RefreshTokenExpiresAt)
 	creds.SetLoginDataCallbackFn(writeDataToConfigFile)
 
-	creds.Perform()
+	if err := creds.Perform(); err != nil {
+		log.Client.Fatal(err)
+	} else {
+		log.Client.Println("Logged in successfully.\nPlease Ctr+C to exit.")
+	}
 }
 
 func writeDataToConfigFile(a *login.AuthData) {
