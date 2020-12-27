@@ -1,11 +1,12 @@
 package vipertest
 
-var AddConfigPathFunc, SetConfigNameFunc, SetCfgFilePathFunc func(in string)
-var AutomaticEnvFunc func()
+var AddConfigPathFunc, SetConfigNameFunc func(in string)
+var AutomaticEnvFunc = func() {}
 var ConfigFileUsed, GetString string
 var GetStringFunc func(in string) string
 var GetInt64Func func(in string) int64
 var SetKeyValue func(key string, value interface{})
+var SetCfgFilePathFunc = func(in string) {}
 var ConfigErr error
 var WriteConfigFunc func() error
 var GetInt64 int64

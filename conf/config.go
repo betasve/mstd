@@ -1,12 +1,14 @@
 package conf
 
 import (
+	"errors"
 	"fmt"
 	"github.com/betasve/mstd/homedir"
-	log "github.com/betasve/mstd/log"
 	tm "github.com/betasve/mstd/time"
 	"github.com/betasve/mstd/viper"
 	"strconv"
+	"strings"
+	"sync"
 	t "time"
 )
 
@@ -22,215 +24,309 @@ const defaultAccessTokenExpiryConfig string = "ate"
 const defaultRefreshTokenExpiryConfig string = "rte"
 const nanosecondsInASecond int64 = 1_000_000_000
 
-var CfgFilePath string
-
-type State struct {
-	ClientId              string
-	ClientSecret          string
-	Permissions           string
-	AccessToken           string
-	RefreshToken          string
-	AccessTokenExpiresAt  t.Time
-	RefreshTokenExpiresAt t.Time
-	AuthCallbackHost      string
-	AuthCallbackPath      string
+type Config struct {
+	mu                    sync.Mutex
+	clientId              string
+	clientSecret          string
+	permissions           string
+	accessToken           string
+	refreshToken          string
+	accessTokenExpiresAt  t.Time
+	refreshTokenExpiresAt t.Time
+	authCallbackHost      string
+	authCallbackPath      string
 }
 
-var CurrentState = State{}
-
-func InitConfig() {
+func (c *Config) InitConfig(cfgFilePath string) error {
 	setEnvVariables()
-	setViperConfig()
 
-	validateConfigFileAttributes()
-	populateCurrentState()
+	if err := setViperConfig(cfgFilePath); err != nil {
+		return err
+	}
+	if err := validateConfigFileAttributes(); err != nil {
+		return err
+	}
+
+	c.populateConfigValues()
+
+	return nil
 }
 
-// TODO: make these public methods private if they turn out not needed
-func GetClientId() string {
+func (c *Config) ClientId() string {
+	return c.clientId
+}
+
+func (c *Config) ClientSecret() string {
+	return c.clientSecret
+}
+
+func (c *Config) ClientPermissions() string {
+	return c.permissions
+}
+
+func (c *Config) ClientAccessToken() string {
+	return c.accessToken
+}
+
+func (c *Config) ClientRefreshToken() string {
+	return c.refreshToken
+}
+
+func (c *Config) ClientAccessTokenExpiresAt() t.Time {
+	return c.accessTokenExpiresAt
+}
+
+func (c *Config) ClientRefreshTokenExpiresAt() t.Time {
+	return c.refreshTokenExpiresAt
+}
+
+func (c *Config) AuthCallbackHost() string {
+	return c.authCallbackHost
+}
+
+func (c *Config) AuthCallbackPath() string {
+	return c.authCallbackPath
+}
+
+func clientId() string {
 	return viper.Client.GetString(defaultClientIdConfig)
 }
 
-func GetClientSecret() string {
+func clientSecret() string {
 	return viper.Client.GetString(defaultClientSecretConfig)
 }
 
-func GetClientPermissions() string {
+func clientPermissions() string {
 	return viper.Client.GetString(defaultPermissionsConfig)
 }
 
-func GetClientAccessToken() string {
+func clientAccessToken() string {
 	return viper.Client.GetString(defaultAccessTokenConfig)
 }
 
-func GetClientRefreshToken() string {
+func clientRefreshToken() string {
 	return viper.Client.GetString(defaultRefreshTokenConfig)
 }
 
-func GetClientAccessTokenExpiry() t.Time {
+func clientAccessTokenExpiry() t.Time {
 	expires := viper.Client.GetInt64(defaultAccessTokenExpiryConfig)
 
 	return t.Unix(expires, 0)
 }
 
-func GetClientRefreshTokenExpiry() t.Time {
+func clientRefreshTokenExpiry() t.Time {
 	expires := viper.Client.GetInt64(defaultRefreshTokenExpiryConfig)
 
 	return t.Unix(expires, 0)
 }
 
-func GetAuthCallbackHost() string {
+func authCallbackHost() string {
 	return viper.Client.GetString(defaultAuthCallbackHost)
 }
 
-func GetAuthCallbackPath() string {
+func authCallbackPath() string {
 	return viper.Client.GetString(defaultAuthCallbackPath)
 }
 
-func SetClientAccessToken(in string) {
+func (c *Config) SetClientAccessToken(in string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	viper.Client.Set(defaultAccessTokenConfig, in)
-	err := viper.Client.WriteConfig()
-	if err != nil {
-		log.Client.Fatal(err.Error())
+
+	if err := viper.Client.WriteConfig(); err != nil {
+		return err
 	}
 
-	populateCurrentState()
+	c.accessToken = in
+
+	return nil
 }
 
-func SetClientRefreshToken(in string) {
+func (c *Config) SetClientRefreshToken(in string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	viper.Client.Set(defaultRefreshTokenConfig, in)
-	err := viper.Client.WriteConfig()
-	if err != nil {
-		log.Client.Fatal(err.Error())
+
+	if err := viper.Client.WriteConfig(); err != nil {
+		return err
 	}
 
-	populateCurrentState()
+	c.refreshToken = in
+
+	return nil
 }
 
-func SetClientAccessTokenExpirySeconds(seconds int) {
-	tokenDuration := secondsToDuration(seconds)
+func (c *Config) SetClientAccessTokenExpirySeconds(seconds int) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	tokenDuration, durErr := secondsToDuration(seconds)
+
+	if durErr != nil {
+		return durErr
+	}
+
+	expiresAt := unixTimeAfter(tokenDuration)
 
 	viper.Client.Set(
 		defaultAccessTokenExpiryConfig,
-		unixTimeAfter(tokenDuration),
+		expiresAt,
 	)
 
-	err := viper.Client.WriteConfig()
-	if err != nil {
-		log.Client.Fatal(err.Error())
+	if err := viper.Client.WriteConfig(); err != nil {
+		return err
 	}
 
-	populateCurrentState()
+	c.accessTokenExpiresAt = t.Unix(expiresAt, 0)
+
+	return nil
 }
 
-func SetClientRefreshTokenExpirySeconds(seconds int) {
-	tokenDuration := secondsToDuration(seconds)
+func (c *Config) SetClientRefreshTokenExpirySeconds(seconds int) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	tokenDuration, durErr := secondsToDuration(seconds)
+
+	if durErr != nil {
+		return durErr
+	}
+
+	expiresAt := unixTimeAfter(tokenDuration)
 
 	viper.Client.Set(
 		defaultRefreshTokenExpiryConfig,
-		unixTimeAfter(tokenDuration),
+		expiresAt,
 	)
 
-	err := viper.Client.WriteConfig()
-	if err != nil {
-		log.Client.Fatal(err.Error())
+	if err := viper.Client.WriteConfig(); err != nil {
+		return err
 	}
 
-	populateCurrentState()
+	c.refreshTokenExpiresAt = t.Unix(expiresAt, 0)
+
+	return nil
 }
 
-func populateCurrentState() {
-	CurrentState.ClientId = GetClientId()
-	CurrentState.ClientSecret = GetClientSecret()
-	CurrentState.Permissions = GetClientPermissions()
-	CurrentState.AccessToken = GetClientAccessToken()
-	CurrentState.RefreshToken = GetClientRefreshToken()
-	CurrentState.AccessTokenExpiresAt = GetClientAccessTokenExpiry()
-	CurrentState.RefreshTokenExpiresAt = GetClientRefreshTokenExpiry()
-	CurrentState.AuthCallbackHost = GetAuthCallbackHost()
-	CurrentState.AuthCallbackPath = GetAuthCallbackPath()
+func (c *Config) populateConfigValues() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.clientId = clientId()
+	c.clientSecret = clientSecret()
+	c.permissions = clientPermissions()
+	c.accessToken = clientAccessToken()
+	c.refreshToken = clientRefreshToken()
+	c.accessTokenExpiresAt = clientAccessTokenExpiry()
+	c.refreshTokenExpiresAt = clientRefreshTokenExpiry()
+	c.authCallbackHost = authCallbackHost()
+	c.authCallbackPath = authCallbackPath()
 }
 
-func secondsToDuration(s int) t.Duration {
+func secondsToDuration(s int) (t.Duration, error) {
 	secsStr := strconv.Itoa(s)
 	durSecs, err := tm.Client.ParseDuration(secsStr + "s")
-	if err != nil {
-		log.Client.Fatal(err.Error())
-	}
 
-	return durSecs
+	return durSecs, err
 }
 
-func setViperConfig() {
-	if CfgFilePath != "" {
-		viper.Client.SetConfigFile(CfgFilePath)
+func setViperConfig(cfgFilePath string) error {
+	if cfgFilePath != "" {
+		viper.Client.SetConfigFile(cfgFilePath)
 	} else {
-		viper.Client.AddConfigPath(homeDir())
+		home, err := homeDir()
+		if err != nil {
+			return err
+		}
+		viper.Client.AddConfigPath(home)
 		viper.Client.SetConfigName(defaultConfigFileName)
 	}
 
-	readConfigFile()
+	return readConfigFile()
 }
 
 func setEnvVariables() {
 	viper.Client.AutomaticEnv()
 }
 
-func readConfigFile() {
-	if err := viper.Client.ReadInConfig(); err == nil {
-		log.Client.Println(fmt.Sprintf("Using config file: %s", viper.Client.ConfigFileUsed()))
-	} else {
-		log.Client.Fatal(err)
+func readConfigFile() error {
+	if err := viper.Client.ReadInConfig(); err != nil {
+		return err
 	}
+
+	return nil
 }
 
-// TODO: Improve method to return accumulated error
-// by improving each validation to return error on its own
-func validateConfigFileAttributes() {
-	validateClientIdConfigPresence()
-	validateClientSecretConfigPresence()
-	validateClientPermissionsConfigPresence()
-	validateAuthCallbackHostConfigPresence()
-	validateAuthCallbackPathConfigPresence()
-}
+func validateConfigFileAttributes() error {
+	var err [5]error
+	err[0] = validateClientIdConfigPresence()
+	err[1] = validateClientSecretConfigPresence()
+	err[2] = validateClientPermissionsConfigPresence()
+	err[3] = validateAuthCallbackHostConfigPresence()
+	err[4] = validateAuthCallbackPathConfigPresence()
 
-func validateClientIdConfigPresence() {
-	if len(GetClientId()) == 0 {
-		log.Client.Fatalf("Missing %s in config file", defaultClientIdConfig)
+	str := []string{"Errors in config file:"}
+	for _, e := range err {
+		if e != nil {
+			str = append(str, e.Error())
+		}
 	}
-}
-
-func validateClientSecretConfigPresence() {
-	if len(GetClientSecret()) == 0 {
-		log.Client.Fatalf("Missing %s in config file", defaultClientSecretConfig)
+	if len(str) != 1 {
+		return errors.New(strings.Join(str, "\n"))
 	}
+
+	return nil
 }
 
-func validateClientPermissionsConfigPresence() {
-	if len(GetClientPermissions()) == 0 {
-		log.Client.Fatalf("Missing %s in config file", defaultPermissionsConfig)
+func validateClientIdConfigPresence() error {
+	if len(clientId()) == 0 {
+		return fmt.Errorf("Missing %s in config file", defaultClientIdConfig)
 	}
+
+	return nil
 }
 
-func validateAuthCallbackHostConfigPresence() {
-	if len(GetAuthCallbackHost()) == 0 {
-		log.Client.Fatalf("Missing %s in config file", defaultAuthCallbackHost)
+func validateClientSecretConfigPresence() error {
+	if len(clientSecret()) == 0 {
+		return fmt.Errorf("Missing %s in config file", defaultClientSecretConfig)
 	}
+
+	return nil
 }
 
-func validateAuthCallbackPathConfigPresence() {
-	if len(GetAuthCallbackPath()) == 0 {
-		log.Client.Fatalf("Missing %s in config file", defaultAuthCallbackPath)
+func validateClientPermissionsConfigPresence() error {
+	if len(clientPermissions()) == 0 {
+		return fmt.Errorf("Missing %s in config file", defaultPermissionsConfig)
 	}
+
+	return nil
 }
 
-func homeDir() string {
+func validateAuthCallbackHostConfigPresence() error {
+	if len(authCallbackHost()) == 0 {
+		return fmt.Errorf("Missing %s in config file", defaultAuthCallbackHost)
+	}
+
+	return nil
+}
+
+func validateAuthCallbackPathConfigPresence() error {
+	if len(authCallbackPath()) == 0 {
+		return fmt.Errorf("Missing %s in config file", defaultAuthCallbackPath)
+	}
+
+	return nil
+}
+
+func homeDir() (string, error) {
 	home, err := homedir.Client.Dir()
 	if err != nil {
-		log.Client.Fatal(err)
+		return "", err
 	}
 
-	return home
+	return home, nil
 }
 
 func unixTimeAfter(d t.Duration) int64 {

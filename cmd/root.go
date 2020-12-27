@@ -22,7 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"github.com/betasve/mstd/conf"
+	"github.com/betasve/mstd/app"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -47,11 +47,11 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(conf.InitConfig)
+	cobra.OnInitialize(app.InitAppConfig)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&conf.CfgFilePath, "config", "", "config file (default is $HOME/.mstd.yaml)")
+	rootCmd.PersistentFlags().StringVar(&app.CfgFilePath, "config", "", "config file (default is $HOME/.mstd.yaml)")
 }

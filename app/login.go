@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"github.com/betasve/mstd/conf"
 	"github.com/betasve/mstd/log"
 	"github.com/betasve/mstd/login"
 	t "github.com/betasve/mstd/time"
@@ -11,15 +10,15 @@ import (
 func Login() {
 	creds := login.Creds{}
 
-	creds.SetAuthCallbackHost(conf.CurrentState.AuthCallbackHost)
-	creds.SetAuthCallbackPath(conf.CurrentState.AuthCallbackPath)
-	creds.SetId(conf.CurrentState.ClientId)
-	creds.SetSecret(conf.CurrentState.ClientSecret)
-	creds.SetPermissions(conf.CurrentState.Permissions)
-	creds.SetAccessToken(conf.CurrentState.AccessToken)
-	creds.SetAccessTokenExpiresAt(conf.CurrentState.AccessTokenExpiresAt)
-	creds.SetRefreshToken(conf.CurrentState.RefreshToken)
-	creds.SetRefreshTokenExpiresAt(conf.CurrentState.RefreshTokenExpiresAt)
+	creds.SetAuthCallbackHost(config.AuthCallbackHost())
+	creds.SetAuthCallbackPath(config.AuthCallbackPath())
+	creds.SetId(config.ClientId())
+	creds.SetSecret(config.ClientSecret())
+	creds.SetPermissions(config.ClientPermissions())
+	creds.SetAccessToken(config.ClientAccessToken())
+	creds.SetAccessTokenExpiresAt(config.ClientAccessTokenExpiresAt())
+	creds.SetRefreshToken(config.ClientRefreshToken())
+	creds.SetRefreshTokenExpiresAt(config.ClientRefreshTokenExpiresAt())
 	creds.SetLoginDataCallbackFn(writeDataToConfigFile)
 
 	if err := creds.Perform(); err != nil {
@@ -30,15 +29,15 @@ func Login() {
 }
 
 func writeDataToConfigFile(a *login.AuthData) {
-	conf.SetClientAccessToken(a.AccessToken)
-	conf.SetClientAccessTokenExpirySeconds(a.ExpiresIn)
+	config.SetClientAccessToken(a.AccessToken)
+	config.SetClientAccessTokenExpirySeconds(a.ExpiresIn)
 
-	conf.SetClientRefreshToken(a.RefreshToken)
+	config.SetClientRefreshToken(a.RefreshToken)
 	expiryDaysToHours := 200 * 24
 	// TODO: Move token duration to a more approriate place
 	day200, err := t.Client.ParseDuration(fmt.Sprintf("%dh", expiryDaysToHours))
 	if err != nil {
 		log.Client.Fatal(err)
 	}
-	conf.SetClientRefreshTokenExpirySeconds(int(day200.Seconds()))
+	config.SetClientRefreshTokenExpirySeconds(int(day200.Seconds()))
 }
