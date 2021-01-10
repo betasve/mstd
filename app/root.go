@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/betasve/mstd/conf"
-	"github.com/betasve/mstd/log"
+	"github.com/betasve/mstd/ext/log"
 )
 
 var config *conf.Config

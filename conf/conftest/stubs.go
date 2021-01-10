@@ -1,7 +1,7 @@
 package conftest
 
 import (
-	"github.com/betasve/mstd/viper/vipertest"
+	"github.com/betasve/mstd/ext/viper/vipertest"
 	"time"
 )
 

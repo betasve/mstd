@@ -18,8 +18,8 @@ package login
 import (
 	"encoding/json"
 	"fmt"
-	httpService "github.com/betasve/mstd/http"
-	t "github.com/betasve/mstd/time"
+	httpService "github.com/betasve/mstd/ext/http"
+	t "github.com/betasve/mstd/ext/time"
 	"io/ioutil"
 	"net/http"
 	"net/url"

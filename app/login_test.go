@@ -2,10 +2,10 @@ package app
 
 import (
 	"errors"
-	"github.com/betasve/mstd/exec"
-	exectest "github.com/betasve/mstd/exec/exectest"
-	"github.com/betasve/mstd/runtime"
-	runtimetest "github.com/betasve/mstd/runtime/runtimetest"
+	"github.com/betasve/mstd/ext/exec"
+	exectest "github.com/betasve/mstd/ext/exec/exectest"
+	"github.com/betasve/mstd/ext/runtime"
+	runtimetest "github.com/betasve/mstd/ext/runtime/runtimetest"
 	osexec "os/exec"
 	"testing"
 )

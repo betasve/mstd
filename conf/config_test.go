@@ -2,12 +2,12 @@ package conf
 
 import (
 	"errors"
-	"github.com/betasve/mstd/homedir"
-	homedirtest "github.com/betasve/mstd/homedir/homedirtest"
-	t "github.com/betasve/mstd/time"
-	tt "github.com/betasve/mstd/time/timetest"
-	"github.com/betasve/mstd/viper"
-	vt "github.com/betasve/mstd/viper/vipertest"
+	"github.com/betasve/mstd/ext/homedir"
+	homedirtest "github.com/betasve/mstd/ext/homedir/homedirtest"
+	t "github.com/betasve/mstd/ext/time"
+	tt "github.com/betasve/mstd/ext/time/timetest"
+	"github.com/betasve/mstd/ext/viper"
+	vt "github.com/betasve/mstd/ext/viper/vipertest"
 	"testing"
 	"time"
 )

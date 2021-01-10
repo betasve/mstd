@@ -3,9 +3,9 @@ package conf
 import (
 	"errors"
 	"fmt"
-	"github.com/betasve/mstd/homedir"
-	tm "github.com/betasve/mstd/time"
-	"github.com/betasve/mstd/viper"
+	"github.com/betasve/mstd/ext/homedir"
+	tm "github.com/betasve/mstd/ext/time"
+	"github.com/betasve/mstd/ext/viper"
 	"strconv"
 	"strings"
 	"sync"
