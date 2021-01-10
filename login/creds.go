@@ -14,11 +14,12 @@ type Creds struct {
 	refreshToken          string
 	accessTokenExpiresAt  time.Time
 	refreshTokenExpiresAt time.Time
-	loginDataCallbackFn   func(*AuthData)
+	loginDataCallbackFn   func(*AuthData) error
+	loginUrlHandlerFn     func(string) error
 }
 
 func (c *Creds) SetAuthCallbackPath(path string) {
-	c.authCallbackHost = path
+	c.authCallbackPath = path
 }
 
 func (c *Creds) SetAuthCallbackHost(host string) {
@@ -52,6 +53,10 @@ func (c *Creds) SetRefreshTokenExpiresAt(refreshTokenExpiresAt time.Time) {
 	c.refreshTokenExpiresAt = refreshTokenExpiresAt
 }
 
-func (c *Creds) SetLoginDataCallbackFn(fn func(*AuthData)) {
+func (c *Creds) SetLoginDataCallbackFn(fn func(*AuthData) error) {
 	c.loginDataCallbackFn = fn
+}
+
+func (c *Creds) SetLoginUrlHandlerFn(fn func(string) error) {
+	c.loginUrlHandlerFn = fn
 }

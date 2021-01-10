@@ -2,9 +2,10 @@ package app
 
 import (
 	"fmt"
+	"github.com/betasve/mstd/exec"
 	"github.com/betasve/mstd/log"
 	"github.com/betasve/mstd/login"
-	t "github.com/betasve/mstd/time"
+	"github.com/betasve/mstd/runtime"
 )
 
 func Login() {
@@ -20,24 +21,54 @@ func Login() {
 	creds.SetRefreshToken(config.ClientRefreshToken())
 	creds.SetRefreshTokenExpiresAt(config.ClientRefreshTokenExpiresAt())
 	creds.SetLoginDataCallbackFn(writeDataToConfigFile)
+	creds.SetLoginUrlHandlerFn(openLoginUrl)
 
-	if err := creds.Perform(); err != nil {
+	if err := creds.PerformLogin(); err != nil {
 		log.Client.Fatal(err)
-	} else {
-		log.Client.Println("Logged in successfully.\nPlease Ctr+C to exit.")
 	}
 }
 
-func writeDataToConfigFile(a *login.AuthData) {
-	config.SetClientAccessToken(a.AccessToken)
-	config.SetClientAccessTokenExpirySeconds(a.ExpiresIn)
-
-	config.SetClientRefreshToken(a.RefreshToken)
-	expiryDaysToHours := 200 * 24
-	// TODO: Move token duration to a more approriate place
-	day200, err := t.Client.ParseDuration(fmt.Sprintf("%dh", expiryDaysToHours))
+func writeDataToConfigFile(a *login.AuthData) error {
+	err := config.SetClientAccessToken(a.AccessToken)
 	if err != nil {
-		log.Client.Fatal(err)
+		return err
 	}
-	config.SetClientRefreshTokenExpirySeconds(int(day200.Seconds()))
+
+	err = config.SetClientAccessTokenExpirySeconds(a.ExpiresIn)
+	if err != nil {
+		return err
+	}
+
+	err = config.SetClientRefreshToken(a.RefreshToken)
+	if err != nil {
+		return err
+	}
+	err = config.SetClientRefreshTokenExpirySeconds(a.ExtExpiresIn)
+	if err != nil {
+		return err
+	}
+
+	log.Client.Println("Logged in successfully.\nPlease Ctr+C to exit.")
+	return nil
+}
+
+func openLoginUrl(url string) error {
+	var err error
+
+	switch runtime.Client.GetOS() {
+	case "linux":
+		err = exec.CmdClient.Command("xdg-open", url).Run()
+	case "windows":
+		err = exec.CmdClient.Command("rundll32", "url.dll,FileProtocolHandler", url).Run()
+	case "darwin":
+		err = exec.CmdClient.Command("open", url).Run()
+	default:
+		err = fmt.Errorf("OS not recognized. Please visit \n\r%s\n\r and login.", url)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
