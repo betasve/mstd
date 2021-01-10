@@ -1,0 +1,9 @@
+access_token:
+ate:
+auth_callback_host_and_port: http://localhost:8080
+auth_callback_path: /login/authorized
+client_id:
+client_secret:
+permissions: Tasks.ReadWrite.Shared,offline_access
+refresh_token:
+rte:
