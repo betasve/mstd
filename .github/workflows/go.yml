@@ -34,4 +34,4 @@ jobs:
         golint .
 
     - name: Run testing
-      run: go test
+      run: go test ./...
