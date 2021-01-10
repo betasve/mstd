@@ -1,7 +1,7 @@
 package exectest
 
 import (
-	"github.com/betasve/mstd/exec"
+	"github.com/betasve/mstd/ext/exec"
 	e "os/exec"
 )
 

@@ -2,10 +2,10 @@ package app
 
 import (
 	"fmt"
-	"github.com/betasve/mstd/exec"
-	"github.com/betasve/mstd/log"
+	"github.com/betasve/mstd/ext/exec"
+	"github.com/betasve/mstd/ext/log"
+	"github.com/betasve/mstd/ext/runtime"
 	"github.com/betasve/mstd/login"
-	"github.com/betasve/mstd/runtime"
 )
 
 func Login() {
