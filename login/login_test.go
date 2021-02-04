@@ -88,6 +88,28 @@ func TestPerformLoginWhenNoTokens(test *testing.T) {
 	}
 }
 
+func TestLoginNeededSuccess(test *testing.T) {
+	creds := Creds{}
+	creds.SetAccessToken("acc_token")
+	creds.SetAccessTokenExpiresAt(time.Client.Now().Add(fiveMins))
+
+	result := creds.LoginNeeded()
+	if result {
+		test.Errorf("\nexpected\nfalse\nbut got\n%v", result)
+	}
+}
+
+func TestLoginNeededFailure(test *testing.T) {
+	creds := Creds{}
+	creds.SetAccessToken("acc_token")
+	creds.SetAccessTokenExpiresAt(time.Client.Now().Add(-fiveMins))
+
+	result := creds.LoginNeeded()
+	if !result {
+		test.Errorf("\nexpected\ntrue\nbut got\n%v", result)
+	}
+}
+
 func TestGetAccessTokenSuccess(test *testing.T) {
 	var response *AuthData
 

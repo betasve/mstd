@@ -53,6 +53,10 @@ func (c *Creds) PerformLogin() error {
 	}
 }
 
+func (c *Creds) LoginNeeded() bool {
+	return !c.isAccessTokenValid()
+}
+
 func (c *Creds) performLogin() error {
 	err := c.loginUrlHandlerFn(c.prepareLoginUrl())
 	if err != nil {

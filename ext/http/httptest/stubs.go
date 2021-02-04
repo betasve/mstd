@@ -18,6 +18,9 @@ var DefaultMockFn = func(req *http.Request) (*http.Response, error) {
 	res.Body = StubbedBody()
 	return res, nil
 }
+var NewRequestStubFn = func(method, url string, body io.Reader) (*http.Request, error) {
+	return http.NewRequest(method, url, body)
+}
 
 var MockFn = DefaultMockFn
 
@@ -31,6 +34,10 @@ func (c *ClientMock) HandleFunc(path string, handler func(http.ResponseWriter, *
 
 func (c *ClientMock) ListenAndServe(addr string, handler http.Handler) error {
 	return ListenAndServeStubFn(addr, handler)
+}
+
+func (c *ClientMock) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
+	return NewRequestStubFn(method, url, body)
 }
 
 func StubbedBody() io.ReadCloser {

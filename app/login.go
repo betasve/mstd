@@ -8,8 +8,10 @@ import (
 	"github.com/betasve/mstd/login"
 )
 
+var creds login.Creds
+
 func Login() {
-	creds := login.Creds{}
+	creds = login.Creds{}
 
 	creds.SetAuthCallbackHost(config.AuthCallbackHost())
 	creds.SetAuthCallbackPath(config.AuthCallbackPath())
@@ -28,11 +30,18 @@ func Login() {
 	}
 }
 
+func LoginNeeded() bool {
+	return creds.LoginNeeded()
+}
+
+// TODO: Update tests by covering the api token setup
 func writeDataToConfigFile(a *login.AuthData) error {
 	err := config.SetClientAccessToken(a.AccessToken)
 	if err != nil {
 		return err
 	}
+
+	apiClient.SetToken(a.AccessToken)
 
 	err = config.SetClientAccessTokenExpirySeconds(a.ExpiresIn)
 	if err != nil {

@@ -6,9 +6,35 @@ import (
 	exectest "github.com/betasve/mstd/ext/exec/exectest"
 	"github.com/betasve/mstd/ext/runtime"
 	runtimetest "github.com/betasve/mstd/ext/runtime/runtimetest"
+	"github.com/betasve/mstd/login"
 	osexec "os/exec"
 	"testing"
+	"time"
 )
+
+func TestLoginNeededSuccess(test *testing.T) {
+	dur, _ := time.ParseDuration("5m")
+	creds = login.Creds{}
+	creds.SetAccessToken("acc_token")
+	creds.SetAccessTokenExpiresAt(time.Now().Add(dur))
+
+	result := creds.LoginNeeded()
+	if result {
+		test.Errorf("\nexpected\nfalse\nbut got\n%v", result)
+	}
+}
+
+func TestLoginNeededFailure(test *testing.T) {
+	dur, _ := time.ParseDuration("5m")
+	creds := login.Creds{}
+	creds.SetAccessToken("acc_token")
+	creds.SetAccessTokenExpiresAt(time.Now().Add(-dur))
+
+	result := creds.LoginNeeded()
+	if !result {
+		test.Errorf("\nexpected\ntrue\nbut got\n%v", result)
+	}
+}
 
 // TODO: Create test helpers for common parts in different
 // variants of tests for this function
