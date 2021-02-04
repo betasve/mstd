@@ -1,11 +1,13 @@
 package http
 
 import (
+	"io"
 	"net/http"
 )
 
 type HttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
+	NewRequest(method, url string, body io.Reader) (*http.Request, error)
 	HandleFunc(path string, handler func(http.ResponseWriter, *http.Request))
 	ListenAndServe(addr string, handler http.Handler) error
 }
@@ -23,4 +25,8 @@ func (c *Client) HandleFunc(path string, handler func(http.ResponseWriter, *http
 
 func (c *Client) ListenAndServe(addr string, handler http.Handler) error {
 	return http.ListenAndServe(addr, handler)
+}
+
+func (c *Client) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
+	return http.NewRequest(method, url, body)
 }
