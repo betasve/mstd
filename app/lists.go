@@ -2,7 +2,7 @@ package app
 
 import (
 	api "github.com/betasve/mstd/todoapi"
-	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter" // TODO: Replace with the abstracted ext/tablewriter
 	"os"
 	"reflect"
 	"strings"
@@ -36,7 +36,6 @@ func ListsIndex(columns []string) error {
 	}
 
 	printResults(lists, columns)
-
 	return nil
 }
 
@@ -49,6 +48,19 @@ func ListsCreate(name string, columns []string) error {
 	}
 
 	printResults(&[]api.ListsItem{*newList}, columns)
+
+	return nil
+}
+
+func ListsUpdate(id, name string, columns []string) error {
+	apiClient.SetToken(config.ClientAccessToken())
+	list, err := apiClient.ListsUpdate(id, name)
+
+	if err != nil {
+		return err
+	}
+
+	printResults(&[]api.ListsItem{*list}, columns)
 
 	return nil
 }
