@@ -29,7 +29,7 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "mstd",
+	Use:   "mstd", // TODO: Replace references of `mstd` with the value of args[0]
 	Short: "A CLI for Microsoft To Do",
 	Long: `This command line interface is for interacting with your account
 in Microsoft's To Do application https://todo.microsoft.com/tasks/.

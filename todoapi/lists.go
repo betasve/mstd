@@ -17,6 +17,7 @@ type TodoApi struct {
 type TodoApiClient interface {
 	ListsIndex() (*[]ListsItem, error)
 	ListsCreate(string) (*ListsItem, error)
+	ListsUpdate(string, string) (*ListsItem, error)
 	SetToken(string)
 	Token() string
 }
@@ -41,6 +42,7 @@ const (
 	jsonCT ContentType = "application/json"
 )
 
+const defaultPageSize string = "?$top=100"
 const listsIndexEndpoint string = "https://graph.microsoft.com/v1.0/me/todo/lists/"
 
 var httpClient httpService.HttpClient = &httpService.Client{}
@@ -51,6 +53,10 @@ func (ta *TodoApi) ListsIndex() (*[]ListsItem, error) {
 
 func (ta *TodoApi) ListsCreate(name string) (*ListsItem, error) {
 	return createAList(ta.token, name)
+}
+
+func (ta *TodoApi) ListsUpdate(id, name string) (*ListsItem, error) {
+	return updateList(ta.token, id, name)
 }
 
 func (ta *TodoApi) SetToken(token string) {
@@ -64,7 +70,7 @@ func (ta *TodoApi) Token() string {
 func retrieveLists(token string) (*[]ListsItem, error) {
 	req, err := constructRequest(
 		"GET",
-		listsIndexEndpoint,
+		listsIndexEndpoint+defaultPageSize,
 		token,
 		nil,
 		formCT,
@@ -120,6 +126,51 @@ func createAList(token, name string) (*ListsItem, error) {
 	body, err := ioutil.ReadAll(res.Body)
 
 	if res.StatusCode != 201 {
+		return nil,
+			fmt.Errorf(
+				"Unsuccessful request to To Do API:\n%d\n%s",
+				res.StatusCode,
+				string(body),
+			)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	listResponse := ListsItem{}
+	if err = json.Unmarshal(body, &listResponse); err != nil {
+		return nil, err
+	}
+
+	return &listResponse, nil
+}
+
+func updateList(token, id, name string) (*ListsItem, error) {
+	jsonObj := []byte(fmt.Sprintf("{\"displayName\": \"%s\"}", name))
+
+	req, err := constructRequest(
+		"PUT",
+		listsIndexEndpoint+id,
+		token,
+		bytes.NewBuffer(jsonObj),
+		jsonCT,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := httpClient.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+
+	if res.StatusCode != 200 {
 		return nil,
 			fmt.Errorf(
 				"Unsuccessful request to To Do API:\n%d\n%s",

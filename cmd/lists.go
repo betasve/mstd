@@ -26,7 +26,6 @@ var listsCmd = &cobra.Command{
 	Short: "Perform operations over To-Do Lists",
 	Long: `A command that provides the capability of listing, creating, editing
 	and deleting lists in your Microsoft To-Do account.`,
-	Run: func(cmd *cobra.Command, args []string) {},
 }
 
 func init() {
