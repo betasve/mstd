@@ -10,5 +10,5 @@ To be able to start using it you would have to:
    file](https://github.com/betasve/mstd/blob/master/.mstd.yml.example),
    (namely) `client_id` and `client_secret`
 
-3. Start using it e.g. `mstd --help` (`mstd` is the work-in progress name for
+3. Start using it e.g. `mstd --help` (`mstd` is the work-in-progress name for
    the compiled tool, but you can name it and use it as you wish
