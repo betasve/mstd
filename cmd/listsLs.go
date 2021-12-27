@@ -21,10 +21,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Defines the `lists` sub-command to get the `lists` and print them to the
+// user.
 var listsLsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "Shows To-Do Lists",
-	Long:  `Lists all, well... lists, residing inside your To-Do account`,
+	Long:  `Prints all the (task-)lists, residing inside your To-Do account`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if app.LoginNeeded() {
 			app.Login()
@@ -36,6 +38,8 @@ var listsLsCmd = &cobra.Command{
 	},
 }
 
+// As in the other cases, just adds the `listsLsCmd` to the command-line tool,
+// enabling it for use.
 func init() {
 	listsCmd.AddCommand(listsLsCmd)
 }

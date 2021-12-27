@@ -21,6 +21,8 @@ import (
 	"strings"
 )
 
+// A command responsible for creating a new list. It takes the passed arguments,
+// formats them properly and passes them to the app.
 var listsCreateCmd = &cobra.Command{
 	Use:   "create [NAME]",
 	Short: "Create a new list",
@@ -37,6 +39,7 @@ var listsCreateCmd = &cobra.Command{
 	},
 }
 
+// Adds the command to be executable by the command-line tool.
 func init() {
 	listsCmd.AddCommand(listsCreateCmd)
 }

@@ -1,3 +1,19 @@
+/*
+Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package app
 
 import (
@@ -8,6 +24,8 @@ import (
 	"strings"
 )
 
+// Maps the column values returned from the MS API to the ones we need to
+// display in the CLI.
 var ColumnsToKeysMap map[string]string = map[string]string{
 	"display name": "Name",
 	"shared":       "Shared",
@@ -16,6 +34,8 @@ var ColumnsToKeysMap map[string]string = map[string]string{
 	"id":           "Id",
 }
 
+// Constructs a list of strings representing the needed headers for the table
+// thats printed as a result of the List operations.
 var ListItemHeaders []string = func(m map[string]string) []string {
 	keys := []string{}
 
@@ -26,6 +46,8 @@ var ListItemHeaders []string = func(m map[string]string) []string {
 	return keys
 }(ColumnsToKeysMap)
 
+// Prints a formatted table with all the lists, contains only the columns,
+// listed in the `columns []string`.
 func ListsIndex(columns []string) error {
 	apiClient.SetToken(config.ClientAccessToken())
 
@@ -39,6 +61,8 @@ func ListsIndex(columns []string) error {
 	return nil
 }
 
+// Creates a new list item and prints it back to output, formatted with the
+// list of columns mentioned in the `columns []string`.
 func ListsCreate(name string, columns []string) error {
 	apiClient.SetToken(config.ClientAccessToken())
 	newList, err := apiClient.ListsCreate(name)
@@ -52,6 +76,10 @@ func ListsCreate(name string, columns []string) error {
 	return nil
 }
 
+// Updates the name of a list. Upon success it returns the updated list with its
+// attributes in columns to the CLI.
+// TODO: Extend the update posibilities to other attributes too (e.g. set as a
+// default list)
 func ListsUpdate(id, name string, columns []string) error {
 	apiClient.SetToken(config.ClientAccessToken())
 	list, err := apiClient.ListsUpdate(id, name)
@@ -65,6 +93,9 @@ func ListsUpdate(id, name string, columns []string) error {
 	return nil
 }
 
+// With the received params [ListItem]s and columns it renders a table with
+// the `columns` as headers of the table, and each ListItem's attributes for
+// that column.
 func printResults(lists *[]api.ListsItem, columns []string) {
 	columnsToHeaders := columnsHeadersIntersection(columns)
 	keys := columnsToKeys(columnsToHeaders, ColumnsToKeysMap)
@@ -79,6 +110,7 @@ func printResults(lists *[]api.ListsItem, columns []string) {
 	table.Render()
 }
 
+// Converts a boolean value to a `yes` or `no` string.
 func boolToStr(b bool) string {
 	if b {
 		return "yes"
@@ -87,6 +119,8 @@ func boolToStr(b bool) string {
 	}
 }
 
+// Filters the original list of [ListItemHeaders] columns with the ones passed
+// in `columns`. Or returns all of them if `columns` is `[]string{"all"}`.
 func columnsHeadersIntersection(columns []string) []string {
 	if len(columns) == 1 &&
 		columns[0] == "all" {
@@ -106,6 +140,8 @@ func columnsHeadersIntersection(columns []string) []string {
 	return result
 }
 
+// Filters the selected columns to their respective keys in [ListItem] enabling
+// accessing them dynamically in [listStrValuesForKeys].
 func columnsToKeys(columns []string, columnsKeysMap map[string]string) []string {
 	resKeys := []string{}
 
@@ -119,6 +155,8 @@ func columnsToKeys(columns []string, columnsKeysMap map[string]string) []string 
 	return resKeys
 }
 
+// Composes a `[]string` of the values for a particular `ListItem` base on it
+// and a list of its keys that are requested.
 func listStrValuesForKeys(listItem api.ListsItem, keys []string) []string {
 	row := []string{}
 

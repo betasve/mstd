@@ -1,3 +1,19 @@
+/*
+Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package app
 
 import (
@@ -10,6 +26,8 @@ import (
 
 var creds login.Creds
 
+// Facilitates the login procedure for the app. Mainly - reads credentials from
+// the config file and saves them in a place they can be easily accessed.
 func Login() {
 	creds = login.Creds{}
 
@@ -30,10 +48,13 @@ func Login() {
 	}
 }
 
+// Checks if the user needs to be logged in (again) or his current session is
+// still active.
 func LoginNeeded() bool {
 	return creds.LoginNeeded()
 }
 
+// Writes data to the config file for the app.
 // TODO: Update tests by covering the api token setup
 func writeDataToConfigFile(a *login.AuthData) error {
 	err := config.SetClientAccessToken(a.AccessToken)
@@ -61,6 +82,8 @@ func writeDataToConfigFile(a *login.AuthData) error {
 	return nil
 }
 
+// Opens the login url (provided as an argument) with the default browser for
+// the operating system the app is being run on.
 func openLoginUrl(url string) error {
 	var err error
 

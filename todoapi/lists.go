@@ -1,3 +1,25 @@
+/*
+Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// The `todoapi` is the package responsible for holding the layer of abstraction
+// that communicates with MS' API regarding the management of Lists and ToDos.
+// It strives to remaing as isolated and unaware of the rest of the environment
+// as possible. It aims to expose as little as possible. Namely only the
+// structures that are used to hold the data, as well as the methods who
+// wrap its retrieving from the API.
 package todoapi
 
 import (
@@ -47,26 +69,33 @@ const listsIndexEndpoint string = "https://graph.microsoft.com/v1.0/me/todo/list
 
 var httpClient httpService.HttpClient = &httpService.Client{}
 
+// Retrieves the collection of `ListItem`s.
 func (ta *TodoApi) ListsIndex() (*[]ListsItem, error) {
 	return retrieveLists(ta.token)
 }
 
+// Creates a ListItem setting its name.
 func (ta *TodoApi) ListsCreate(name string) (*ListsItem, error) {
 	return createAList(ta.token, name)
 }
 
+// Updates a ListItem finding it by its id and changing its name.
 func (ta *TodoApi) ListsUpdate(id, name string) (*ListsItem, error) {
 	return updateList(ta.token, id, name)
 }
 
+// Sets a token to be used for the API communication.
 func (ta *TodoApi) SetToken(token string) {
 	ta.token = token
 }
 
+// Gets the token that is used for the API communication.
 func (ta *TodoApi) Token() string {
 	return ta.token
 }
 
+// The function that is responsible for building the HTTP request and handling
+// the response of the Lists API endpoint.
 func retrieveLists(token string) (*[]ListsItem, error) {
 	req, err := constructRequest(
 		"GET",
@@ -101,6 +130,8 @@ func retrieveLists(token string) (*[]ListsItem, error) {
 	return &listsResponse.Lists, nil
 }
 
+// The function that is responsible for building the HTTP request and handling
+// the response of the 'Create a list' API endpoint.
 func createAList(token, name string) (*ListsItem, error) {
 	jsonObj := []byte(fmt.Sprintf("{\"displayName\": \"%s\"}", name))
 
@@ -146,6 +177,8 @@ func createAList(token, name string) (*ListsItem, error) {
 	return &listResponse, nil
 }
 
+// The function that is responsible for building the HTTP request and handling
+// the response of the 'Update a list' API endpoint.
 func updateList(token, id, name string) (*ListsItem, error) {
 	jsonObj := []byte(fmt.Sprintf("{\"displayName\": \"%s\"}", name))
 
@@ -191,6 +224,8 @@ func updateList(token, id, name string) (*ListsItem, error) {
 	return &listResponse, nil
 }
 
+// A 'helper' function to construct requests with the needed (valid) Auth
+// headers for successfully communicating with the API.
 func constructRequest(
 	method, path, token string,
 	body io.Reader,
