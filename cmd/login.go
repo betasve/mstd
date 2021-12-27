@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// loginCmd represents the login command
+// Represents the login command. It is the entry point of the login mechanism.
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Performs a login procedure to login into your Microsoft account",
@@ -32,17 +32,8 @@ var loginCmd = &cobra.Command{
 	},
 }
 
+// Adds the `loginCmd` to the root command, thereby enabling it for invokation
+// from in the command-line tool.
 func init() {
 	rootCmd.AddCommand(loginCmd)
-	// app.CallbackListen("url", func(a string) {})
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// loginCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// loginCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

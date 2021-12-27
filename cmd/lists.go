@@ -21,6 +21,8 @@ import (
 
 var showColumns string
 
+// Definition of the `listsCmd` to lay the ground for perofrming operations
+// over the lists' section of the API.
 var listsCmd = &cobra.Command{
 	Use:   "lists",
 	Short: "Perform operations over To-Do Lists",
@@ -28,6 +30,8 @@ var listsCmd = &cobra.Command{
 	and deleting lists in your Microsoft To-Do account.`,
 }
 
+// Registers the command with the command-line tool (enabling it for usage) as
+// well as sets the flags that it's able to use to change its behavior.
 func init() {
 	rootCmd.AddCommand(listsCmd)
 

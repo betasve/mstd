@@ -24,6 +24,8 @@ import (
 
 var name string
 
+// Defins the command for updating a list. It passes it's arguments to the app
+// logic by processing them and normalazing them first.
 var listsUpdateCmd = &cobra.Command{
 	Use:   "update [ID]",
 	Short: "Update a list",
@@ -41,6 +43,8 @@ var listsUpdateCmd = &cobra.Command{
 	},
 }
 
+// Adds the command to the command-line tool, as well as setting the arguments
+// it can take. So far this is only the `name` of a list.
 func init() {
 	listsCmd.AddCommand(listsUpdateCmd)
 	listsUpdateCmd.Flags().StringVarP(

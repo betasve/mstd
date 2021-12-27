@@ -19,6 +19,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+// The `cmd` package is in charge of handling the 'front-end' part of the app.
+// It takes commands from the CLI, calls the `app` with them and waits for the
+// `app` to provide the data that needs  to be printed back to the user.
 package cmd
 
 import (
@@ -27,7 +31,8 @@ import (
 	"log"
 )
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands.
+// We choose to have this command only print some help instructions.
 var rootCmd = &cobra.Command{
 	Use:   "mstd", // TODO: Replace references of `mstd` with the value of args[0]
 	Short: "A CLI for Microsoft To Do",
@@ -40,18 +45,19 @@ To begin your journey you have to:
 3. Start using it (mstd --help)`,
 }
 
+// The method that's attached to execute the `root` command. As mentioned above
+// it just executes `rootCmd` and logs any possible errors.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
 
+// Going in the init() method (each time the root command is invoked, and sub-
+// commands are provided) we initialize our `app` and get env vars for config
+// file path that the user possibly did set.
 func init() {
 	cobra.OnInitialize(app.InitAppConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&app.CfgFilePath, "config", "", "config file (default is $HOME/.mstd.yaml)")
 }

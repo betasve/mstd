@@ -13,6 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+// The `login` package is in charge of holding the login logic needed for
+// working with MS' ToDo API. It's holding the knowledge of what requests to
+// build and where to send them in order to retrieve the tokens we need so we
+// can successfully retrieve and create lists and todo items onward in the app.
 package login
 
 import (
@@ -44,6 +49,7 @@ var callbackFn func(string) error
 
 const refreshTokenValidityInHours = 200 * 24
 
+// Logs in a user.
 // TODO: Add logout command to remove attributes from conf file
 func (c *Creds) PerformLogin() error {
 	if c.alreadyLoggedIn() {
@@ -53,10 +59,12 @@ func (c *Creds) PerformLogin() error {
 	}
 }
 
+// Checks if the user needs to log in or she is already logged in.
 func (c *Creds) LoginNeeded() bool {
 	return !c.isAccessTokenValid()
 }
 
+// Performs the login operation procedure.
 func (c *Creds) performLogin() error {
 	err := c.loginUrlHandlerFn(c.prepareLoginUrl())
 	if err != nil {
@@ -66,6 +74,7 @@ func (c *Creds) performLogin() error {
 	return CallbackListen(c.authCallbackPath, c.getAccessToken)
 }
 
+// Retrieves the access token using MS' login API.
 func (c *Creds) getAccessToken(authKey string) error {
 	request, err := buildRequestObjectWithEncodedParams(
 		baseRequestUrl+tokenRequestPath,
@@ -79,6 +88,7 @@ func (c *Creds) getAccessToken(authKey string) error {
 	return c.processTokenRequest(request)
 }
 
+// Retrieves the refresh token using MS' login API.
 func (c *Creds) getRefreshToken() error {
 	request, err := buildRequestObjectWithEncodedParams(
 		baseRequestUrl+tokenRequestPath,
@@ -92,6 +102,7 @@ func (c *Creds) getRefreshToken() error {
 	return c.processTokenRequest(request)
 }
 
+// Processes the received data to use it for our Config sructure.
 func (c *Creds) processTokenRequest(request *http.Request) error {
 	body, err := sendRequest(request)
 	if err != nil {
@@ -108,20 +119,24 @@ func (c *Creds) processTokenRequest(request *http.Request) error {
 	return c.loginDataCallbackFn(&a)
 }
 
+// Checks if the user is already logged in.
 func (c *Creds) alreadyLoggedIn() bool {
 	return c.isAccessTokenValid() || c.isRefreshTokenValid()
 }
 
+// Checks if the access token is still valid.
 func (c *Creds) isAccessTokenValid() bool {
 	return len(c.accessToken) != 0 &&
 		t.Client.Now().Before(c.accessTokenExpiresAt)
 }
 
+// Checks if the refresh token is still valid.
 func (c *Creds) isRefreshTokenValid() bool {
 	return len(c.refreshToken) != 0 &&
 		t.Client.Now().Before(c.refreshTokenExpiresAt)
 }
 
+// Refreshes the token if it's needed.
 func (c *Creds) refreshTokenIfNeeded() error {
 	if !c.isAccessTokenValid() {
 		return c.getRefreshToken()
@@ -130,6 +145,8 @@ func (c *Creds) refreshTokenIfNeeded() error {
 	return nil
 }
 
+// Builds a request body(for receiving the auth token), holding the needed
+// (documented in the API) url values.
 func (c *Creds) buildRequestBodyForAuthToken(authKey string) url.Values {
 	data := url.Values{}
 	data.Set("client_id", c.clientId)
@@ -142,6 +159,8 @@ func (c *Creds) buildRequestBodyForAuthToken(authKey string) url.Values {
 	return data
 }
 
+// Builds a request body(for receiving the refresh token), holding the needed
+// (documented in the API) url values.
 func (c *Creds) buildRequestBodyForRefreshToken() url.Values {
 	data := url.Values{}
 	data.Set("client_id", c.clientId)
@@ -152,6 +171,7 @@ func (c *Creds) buildRequestBodyForRefreshToken() url.Values {
 	return data
 }
 
+// Builds a request object with encoded params.
 func buildRequestObjectWithEncodedParams(requestUrl, urlEncodedParams string) (*http.Request, error) {
 	req, err := http.NewRequest(
 		"POST",
@@ -169,6 +189,7 @@ func buildRequestObjectWithEncodedParams(requestUrl, urlEncodedParams string) (*
 	return req, nil
 }
 
+// Sends a (preliminarily prepared) request and returns its body bytes.
 func sendRequest(req *http.Request) ([]byte, error) {
 	res, err := httpClient.Do(req)
 
@@ -186,6 +207,8 @@ func sendRequest(req *http.Request) ([]byte, error) {
 	return body, nil
 }
 
+// Spins up a tiny HTTP serer on :8008 to listen for a callback and handle the
+// passed params.
 func CallbackListen(callbackUrl string, cb func(string) error) error {
 	callbackFn = cb
 
@@ -199,6 +222,8 @@ func CallbackListen(callbackUrl string, cb func(string) error) error {
 	return nil
 }
 
+// The handler function for the tiny HTTP server. It's doing the actual
+// handling of the request values.
 func responder(w http.ResponseWriter, r *http.Request) {
 	values := r.URL.Query()
 	code := strings.Join(values["code"], "")
@@ -218,6 +243,8 @@ func responder(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Assembles the url (and its params) we need to use in order to log
+// with MS' API and receive the tokens we need.
 func (c *Creds) prepareLoginUrl() string {
 	urlParams := url.Values{}
 
